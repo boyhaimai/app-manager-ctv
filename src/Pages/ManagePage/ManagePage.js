@@ -18,6 +18,9 @@ import {
   Dialog,
   DialogTitle,
   DialogContent,
+  useTheme,
+  IconButton,
+  Menu,
 } from "@mui/material";
 import {
   Chat,
@@ -28,6 +31,7 @@ import {
   Save,
   Close,
   InfoOutlined,
+  Dehaze,
 } from "@mui/icons-material";
 import {
   CartesianGrid,
@@ -41,6 +45,7 @@ import classNames from "classnames/bind";
 
 import styles from "./ManagePage.module.scss";
 import { Link, useNavigate } from "react-router-dom";
+import { useMediaQuery } from "@mui/system";
 
 const cx = classNames.bind(styles);
 const urlGetInfoConfig = "https://wf.mkt04.vawayai.com/webhook/get_info_msg";
@@ -80,6 +85,14 @@ function ManagePage() {
   });
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [deleteId, setDeleteId] = useState(null);
+  // Responsive + mobile menu
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+
+  const [anchorEl, setAnchorEl] = useState(null);
+  const openMenu = Boolean(anchorEl);
+  const handleMenuOpen = (event) => setAnchorEl(event.currentTarget);
+  const handleMenuClose = () => setAnchorEl(null);
 
   const handleCloseSnackbar = () => {
     setSnackbar({ ...snackbar, open: false });
@@ -293,141 +306,241 @@ function ManagePage() {
 
   return (
     <div className={cx("wrapper")} ref={wrapperRef}>
-      <Box className={cx("title_header")} ref={headerRef}>
-        <Box>
-          <div style={{ fontSize: "20px", fontWeight: "bold" }}>Tổng quan</div>
-        </Box>
-        <Box display="flex" gap={2}>
-          <FormControl variant="outlined" size="small" sx={{ minWidth: 200 }}>
-            <InputLabel
-              sx={{
-                fontSize: "14px",
-                color: "var(--layer_background)!important",
+      {/* Header responsive: title left, controls collapse into menu on mobile */}
+      <Box
+        className={cx("title_header")}
+        ref={headerRef}
+        sx={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          width: "100%",
+          px: 0,
+        }}
+      >
+        {/* Title luôn hiện */}
+        <Typography
+          variant="h6"
+          sx={{
+            fontWeight: "bold",
+            fontSize: isMobile ? "18px" : "20px",
+            color: "white",
+            ml: 2,
+          }}
+        >
+          Tổng quan
+        </Typography>
+
+        {/* If mobile: show single ICON button that opens menu.
+      If not mobile: show full controls (original layout). */}
+        {isMobile ? (
+          <>
+            <IconButton
+              aria-label="menu"
+              aria-controls={openMenu ? "header-menu" : undefined}
+              aria-haspopup="true"
+              onClick={handleMenuOpen}
+              sx={{ color: "white" }}
+            >
+              <Dehaze />
+            </IconButton>
+
+            <Menu
+              id="header-menu"
+              anchorEl={anchorEl}
+              open={openMenu}
+              onClose={handleMenuClose}
+              anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+              transformOrigin={{ vertical: "top", horizontal: "center" }}
+              PaperProps={{
+                sx: {
+                  width: "100vw", // full width
+                  maxWidth: "100vw",
+                  left: "0 !important", // ép nó dính sát trái
+                  right: "0 !important", // ép nó dính sát phải
+                },
               }}
             >
-              Name Project
-            </InputLabel>
-            <Select
-              value={selectedConfig?.id || ""}
-              onChange={(e) => {
-                const chosen = configs.find((c) => c.id === e.target.value);
-                if (chosen) handleSelectConfig(chosen);
-              }}
-              renderValue={(selectedId) => {
-                const chosen = configs.find((c) => c.id === selectedId);
-                return chosen ? chosen.name_project : "";
-              }}
-              sx={{
-                fontSize: "14px",
-                color: "var(--layer_background)",
-                "& .MuiSelect-select": { py: 1.5 },
-                whiteSpace: "nowrap",
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-                display: "block",
-                maxWidth: "100%",
-                "& .MuiOutlinedInput-notchedOutline": {
-                  borderColor: "var(--layer_background) !important",
-                },
-                "&:hover .MuiOutlinedInput-notchedOutline": {
-                  borderColor: "var(--layer_background)",
-                  color: "var(--layer_background) !important",
-                },
-                "& .MuiSelect-icon": {
-                  color: "var(--layer_background)",
-                  right: "-2px",
-                },
-              }}
-            >
-              {configs.map((cfg) => (
-                <MenuItem
-                  key={cfg.id}
-                  value={cfg.id} // ⚡ vẫn dùng id để quản lý
+              {/* 1) Select (project) */}
+              <MenuItem disableRipple sx={{ px: 2, py: 1.5 }}>
+                <FormControl variant="outlined" size="small" fullWidth>
+                  <InputLabel sx={{ fontSize: 13 }}>Name Project</InputLabel>
+                  <Select
+                    value={selectedConfig?.id || ""}
+                    onChange={(e) => {
+                      const chosen = configs.find(
+                        (c) => c.id === e.target.value
+                      );
+                      if (chosen) handleSelectConfig(chosen);
+                      handleMenuClose();
+                    }}
+                    displayEmpty
+                  >
+                    {configs.map((cfg) => (
+                      <MenuItem key={cfg.id} value={cfg.id}>
+                        {cfg.name_project}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </MenuItem>
+
+              {/* 2) Add config */}
+              <MenuItem
+                onClick={() => {
+                  handleMenuClose();
+                  // navigate to add-config via Link: we use window.location or push
+                  // but better to use Link inside the MenuItem — we'll trigger navigate
+                  // using JS to keep it simple:
+                  window.location.href = "/add-config";
+                }}
+              >
+                <Button
+                  variant="outlined"
+                  fullWidth
                   sx={{
-                    fontSize: "14px",
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
+                    textTransform: "none",
+                    borderColor: "black", // viền đen
+                    color: "black", // chữ đen
+                    "&:hover": {
+                      borderColor: "black",
+                      backgroundColor: "rgba(0,0,0,0.1)", // hover có nền xám nhẹ
+                    },
                   }}
                 >
-                  <span>{cfg.name_project}</span>
-                  <Close
-                    sx={{ fontSize: 18, color: "red", cursor: "pointer" }}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setDeleteId(cfg.id);
-                      setConfirmOpen(true);
-                    }}
-                  />
-                  <Dialog
-                    open={confirmOpen}
-                    onClose={() => setConfirmOpen(false)}
-                  >
-                    <DialogTitle sx={{ fontWeight: "bold" }}>Xác nhận xoá</DialogTitle>
-                    <DialogContent>
-                      <Typography variant="body1" sx={{fontSize: "18px", ml: 2}}>Bạn có chắc muốn xoá config này?</Typography>
-                    </DialogContent>
-                    <DialogActions>
-                      <Button
-                        sx={{ textTransform: "none" }}
-                        onClick={() => setConfirmOpen(false)}
-                        variant="outlined"
-                      >
-                        Hủy
-                      </Button>
-                      <Button
-                        color="error"
-                        onClick={() => {
-                          handleDeleteConfig(deleteId);
-                          setConfirmOpen(false);
-                        }}
-                        sx={{ textTransform: "none" }}
-                        variant="contained"
-                      >
-                        Xoá
-                      </Button>
-                    </DialogActions>
-                  </Dialog>
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
+                  + Thêm Config
+                </Button>
+              </MenuItem>
 
-          <Button
-            variant="outlined"
-            component={Link}
-            size="small"
-            startIcon={<Add />}
-            sx={{
-              color: "white !important",
-              borderColor: "rgba(255, 255, 255, 0.5)",
-              textTransform: "capitalize",
-              "&:hover": {
-                borderColor: "white",
-                backgroundColor: "rgba(255, 255, 255, 0.1)",
-              },
-            }}
-            to="/add-config"
-          >
-            Thêm config
-          </Button>
-          <Button
-            variant="contained"
-            size="small"
-            startIcon={<Save />}
-            onClick={handleSave} // 👉 gắn handler
-            sx={{
-              backgroundColor: "rgba(255, 255, 255, 0.2)",
-              color: "white",
-              textTransform: "none",
-              "&:hover": {
-                backgroundColor: "rgba(255, 255, 255, 0.3)",
-              },
-            }}
-          >
-            Lưu cấu hình
-          </Button>
-        </Box>
+              {/* 3) Save */}
+              <MenuItem
+                onClick={() => {
+                  handleSave();
+                  handleMenuClose();
+                }}
+              >
+                <Button
+                  variant="contained"
+                  fullWidth
+                  sx={{
+                    textTransform: "none",
+                    backgroundColor: "black", // nền đen
+                    color: "white", // chữ trắng
+                    "&:hover": {
+                      backgroundColor: "#333", // hover đen nhạt hơn
+                    },
+                  }}
+                >
+                  💾 Lưu cấu hình
+                </Button>
+              </MenuItem>
+            </Menu>
+          </>
+        ) : (
+          // Desktop: giữ layout hiện tại (select + 2 nút ngang)
+          <Box display="flex" gap={2} alignItems="center">
+            <FormControl variant="outlined" size="small" sx={{ minWidth: 200 }}>
+              <InputLabel
+                sx={{
+                  fontSize: "14px",
+                  color: "var(--layer_background)!important",
+                }}
+              >
+                Name Project
+              </InputLabel>
+              <Select
+                value={selectedConfig?.id || ""}
+                onChange={(e) => {
+                  const chosen = configs.find((c) => c.id === e.target.value);
+                  if (chosen) handleSelectConfig(chosen);
+                }}
+                renderValue={(selectedId) => {
+                  const chosen = configs.find((c) => c.id === selectedId);
+                  return chosen ? chosen.name_project : "";
+                }}
+                sx={{
+                  fontSize: "14px",
+                  color: "var(--layer_background)",
+                  "& .MuiSelect-select": { py: 1.5 },
+                  whiteSpace: "nowrap",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  display: "block",
+                  maxWidth: "100%",
+                  "& .MuiOutlinedInput-notchedOutline": {
+                    borderColor: "var(--layer_background) !important",
+                  },
+                  "&:hover .MuiOutlinedInput-notchedOutline": {
+                    borderColor: "var(--layer_background)",
+                  },
+                  "& .MuiSelect-icon": {
+                    color: "var(--layer_background)",
+                    right: "-2px",
+                  },
+                }}
+              >
+                {configs.map((cfg) => (
+                  <MenuItem
+                    key={cfg.id}
+                    value={cfg.id}
+                    sx={{
+                      fontSize: "14px",
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                    }}
+                  >
+                    <span>{cfg.name_project}</span>
+                    <Close
+                      sx={{ fontSize: 18, color: "red", cursor: "pointer" }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setDeleteId(cfg.id);
+                        setConfirmOpen(true);
+                      }}
+                    />
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+
+            <Button
+              variant="outlined"
+              component={Link}
+              size="small"
+              startIcon={<Add />}
+              sx={{
+                color: "white !important",
+                borderColor: "rgba(255, 255, 255, 0.5)",
+                textTransform: "capitalize",
+                "&:hover": {
+                  borderColor: "white",
+                  backgroundColor: "rgba(255, 255, 255, 0.1)",
+                },
+              }}
+              to="/add-config"
+            >
+              Thêm config
+            </Button>
+
+            <Button
+              variant="contained"
+              size="small"
+              startIcon={<Save />}
+              onClick={handleSave}
+              sx={{
+                backgroundColor: "rgba(255, 255, 255, 0.2)",
+                color: "white",
+                textTransform: "none",
+                "&:hover": {
+                  backgroundColor: "rgba(255, 255, 255, 0.3)",
+                },
+              }}
+            >
+              Lưu cấu hình
+            </Button>
+          </Box>
+        )}
       </Box>
 
       <Box p={4} mt={7}>
@@ -477,15 +590,18 @@ function ManagePage() {
               <>
                 <Grid container spacing={2} sx={{ mb: 3 }}>
                   {/* Biểu đồ tăng trưởng truy cập */}
-                  <Grid
+                  {/* <Grid
                     item
+                    xs={12}
+                    md={6}
                     sx={{
                       width: "100%",
                       display: "flex",
                       justifyContent: "space-between",
                     }}
-                  >
-                    <Paper sx={{ p: 2, borderRadius: 2, width: "49%" }}>
+                  > */}
+                  <Grid item xs={12}>
+                    <Paper sx={{ p: 2, borderRadius: 2 }}>
                       <Typography fontWeight="bold" fontSize={16} mb={2}>
                         Tổng số hội thoại trong từng tháng
                       </Typography>
@@ -505,202 +621,228 @@ function ManagePage() {
                       </ResponsiveContainer>
                     </Paper>
 
-                    <Grid
-                      container
-                      spacing={2}
-                      sx={{
-                        mb: 3,
-                        display: "flex",
-                        justifyContent: "space-between",
-                        flexWrap: "wrap",
-                        width: "48%",
-                      }}
-                    >
-                      {[
-                        {
-                          title: "Tổng khách hàng",
-                          value: stats.total_customers,
-                          icon: (
-                            <Groups
-                              sx={{ color: "green", fontSize: 20, mr: 1 }}
-                            />
-                          ),
-                          color: "green",
-                        },
-                        {
-                          title: "Cuộc Trò Chuyện",
-                          value: (
-                            <Box
-                              sx={{
-                                display: "flex",
-                                justifyContent: "space-between",
-                              }}
-                            >
-                              <Box>
-                                <p
-                                  style={{ fontSize: "12px", marginTop: "8px" }}
-                                >
-                                  Đã trả lời
-                                </p>
-                                <Typography fontSize={36} mr={2}>
-                                  {stats.total_replied}
-                                </Typography>
-                              </Box>
-                              <Box>
-                                <p
-                                  style={{ fontSize: "12px", marginTop: "8px" }}
-                                >
-                                  Đã bỏ lỡ
-                                </p>
-                                <Typography fontSize={36}>
-                                  {stats.total_unreplied}
-                                </Typography>
-                              </Box>
-                            </Box>
-                          ),
-                          icon: (
-                            <Chat
-                              sx={{ color: "#D81B60", fontSize: 20, mr: 1 }}
-                            />
-                          ),
-                          color: "#D81B60",
-                        },
-                        {
-                          title: "Tổng cộng tác viên",
-                          value: stats.total_ctv,
-
-                          icon: (
-                            <GroupAdd
-                              sx={{ color: "#F44336", fontSize: 20, mr: 1 }}
-                            />
-                          ),
-                          color: "#F44336",
-                        },
-                        {
-                          title: "Tổng cuộc chat",
-                          value: (
-                            <Box
-                              sx={{
-                                display: "flex",
-                                justifyContent: "space-between",
-                              }}
-                            >
+                    <Grid xs={12} md={6} item sx={{ mt: 3 }}>
+                      {/* <Grid
+                        container
+                        spacing={2}
+                        item
+                        sx={{
+                          mb: 3,
+                          display: "flex",
+                          justifyContent: "space-between",
+                          flexWrap: "wrap",
+                          width: "48%",
+                        }}
+                      > */}
+                      <Grid container spacing={2}>
+                        {[
+                          {
+                            title: "Tổng khách hàng",
+                            value: stats.total_customers,
+                            icon: (
+                              <Groups
+                                sx={{ color: "green", fontSize: 20, mr: 1 }}
+                              />
+                            ),
+                            color: "green",
+                          },
+                          {
+                            title: "Cuộc Trò Chuyện",
+                            value: (
                               <Box
                                 sx={{
-                                  marginRight: "10px",
-                                  textAlign: "center",
+                                  display: "flex",
+                                  justifyContent: "space-between",
                                 }}
                               >
-                                <p
-                                  style={{ fontSize: "12px", marginTop: "8px" }}
-                                >
-                                  Hôm nay
-                                </p>
-                                <Typography fontSize={36} mr={2}>
-                                  {stats.chats_today}
-                                </Typography>
-                              </Box>
-                              <Box
-                                sx={{
-                                  marginRight: "10px",
-                                  textAlign: "center",
-                                }}
-                              >
-                                <p
-                                  style={{ fontSize: "12px", marginTop: "8px" }}
-                                >
-                                  7 ngày qua
-                                </p>
-                                <Typography fontSize={36}>
-                                  {stats.chats_last_7d}
-                                </Typography>
-                              </Box>
-                              <Box
-                                sx={{
-                                  marginRight: "10px",
-                                  textAlign: "center",
-                                }}
-                              >
-                                <p
-                                  style={{ fontSize: "12px", marginTop: "8px" }}
-                                >
-                                  1 tháng qua
-                                </p>
-                                <Typography fontSize={36}>
-                                  {stats.chats_this_month}
-                                </Typography>
-                              </Box>
-                            </Box>
-                          ),
-                          icon: (
-                            <Forum
-                              sx={{ color: "#D81B60", fontSize: 20, mr: 1 }}
-                            />
-                          ),
-                          color: "#D81B60",
-                        },
-                      ].map((item, idx) => (
-                        <Grid item key={idx} sx={{ width: "48%" }}>
-                          <Paper
-                            elevation={2}
-                            sx={{
-                              p: 2,
-                              borderRadius: 2,
-                              display: "flex",
-                              flexDirection: "row",
-                              alignItems: "center",
-                              justifyContent: "space-between",
-                              width: "100%",
-                              height: "100%",
-                              cursor: "pointer",
-                            }}
-                            onClick={() => {
-                              if (item.title === "Tổng cộng tác viên") {
-                                handleOpenDialog("total_ctv");
-                              } else if (item.title === "Cuộc Trò Chuyện") {
-                                handleOpenDialog("unreplied");
-                              } else if (item.title === "Tổng cuộc chat") {
-                                handleOpenDialog("today");
-                              }
-                            }}
-                          >
-                            <Box display="flex" alignItems="center" gap={1}>
-                              <Box>
-                                <Typography
-                                  fontWeight="bold"
-                                  fontSize={16}
-                                  sx={{
-                                    color: "var(--c_letter)",
-                                    display: "flex",
-                                    alignItems: "center",
-                                  }}
-                                >
-                                  {item.icon} {item.title}
-                                </Typography>
-                                <Box
-                                  sx={{
-                                    fontSize: 36,
-                                    fontWeight: "bold",
-                                    marginLeft: "20px",
-                                  }}
-                                >
-                                  {item.title !== "Cuộc Trò Chuyện" && (
-                                    <p
-                                      style={{
-                                        color: "var(--c_letter)",
-                                        fontSize: 12,
-                                        marginTop: "10px",
-                                        marginBottom: "10px",
-                                      }}
-                                    ></p>
-                                  )}
-                                  {item.value}
+                                <Box>
+                                  <p
+                                    style={{
+                                      fontSize: "12px",
+                                      marginTop: "8px",
+                                    }}
+                                  >
+                                    Đã trả lời
+                                  </p>
+                                  <Typography fontSize={36} mr={2}>
+                                    {stats.total_replied}
+                                  </Typography>
+                                </Box>
+                                <Box>
+                                  <p
+                                    style={{
+                                      fontSize: "12px",
+                                      marginTop: "8px",
+                                    }}
+                                  >
+                                    Đã bỏ lỡ
+                                  </p>
+                                  <Typography fontSize={36}>
+                                    {stats.total_unreplied}
+                                  </Typography>
                                 </Box>
                               </Box>
-                            </Box>
-                          </Paper>
-                        </Grid>
-                      ))}
+                            ),
+                            icon: (
+                              <Chat
+                                sx={{ color: "#D81B60", fontSize: 20, mr: 1 }}
+                              />
+                            ),
+                            color: "#D81B60",
+                          },
+                          {
+                            title: "Tổng cộng tác viên",
+                            value: stats.total_ctv,
+
+                            icon: (
+                              <GroupAdd
+                                sx={{ color: "#F44336", fontSize: 20, mr: 1 }}
+                              />
+                            ),
+                            color: "#F44336",
+                          },
+                          {
+                            title: "Tổng cuộc chat",
+                            value: (
+                              <Box
+                                sx={{
+                                  display: "flex",
+                                  justifyContent: "space-between",
+                                }}
+                              >
+                                <Box
+                                  sx={{
+                                    marginRight: "10px",
+                                    textAlign: "center",
+                                  }}
+                                >
+                                  <p
+                                    style={{
+                                      fontSize: "12px",
+                                      marginTop: "8px",
+                                    }}
+                                  >
+                                    Hôm nay
+                                  </p>
+                                  <Typography fontSize={36} mr={2}>
+                                    {stats.chats_today}
+                                  </Typography>
+                                </Box>
+                                <Box
+                                  sx={{
+                                    marginRight: "10px",
+                                    textAlign: "center",
+                                  }}
+                                >
+                                  <p
+                                    style={{
+                                      fontSize: "12px",
+                                      marginTop: "8px",
+                                    }}
+                                  >
+                                    7 ngày qua
+                                  </p>
+                                  <Typography fontSize={36}>
+                                    {stats.chats_last_7d}
+                                  </Typography>
+                                </Box>
+                                <Box
+                                  sx={{
+                                    marginRight: "10px",
+                                    textAlign: "center",
+                                  }}
+                                >
+                                  <p
+                                    style={{
+                                      fontSize: "12px",
+                                      marginTop: "8px",
+                                    }}
+                                  >
+                                    1 tháng qua
+                                  </p>
+                                  <Typography fontSize={36}>
+                                    {stats.chats_this_month}
+                                  </Typography>
+                                </Box>
+                              </Box>
+                            ),
+                            icon: (
+                              <Forum
+                                sx={{ color: "#D81B60", fontSize: 20, mr: 1 }}
+                              />
+                            ),
+                            color: "#D81B60",
+                          },
+                        ].map((item, idx) => (
+                          // <Grid
+                          //   item
+                          //   key={idx}
+                          //   xs={12}
+                          //   sm={6}
+                          //   sx={{ width: "48%" }}
+                          // >
+                          <Grid item xs={12} sm={6} key={idx}>
+                            <Paper
+                              elevation={2}
+                              sx={{
+                                p: 2,
+                                borderRadius: 2,
+                                display: "flex",
+                                flexDirection: "row",
+                                alignItems: "center",
+                                justifyContent: "space-between",
+                                width: "100%",
+                                height: "100%",
+                                cursor: "pointer",
+                              }}
+                              onClick={() => {
+                                if (item.title === "Tổng cộng tác viên") {
+                                  handleOpenDialog("total_ctv");
+                                } else if (item.title === "Cuộc Trò Chuyện") {
+                                  handleOpenDialog("unreplied");
+                                } else if (item.title === "Tổng cuộc chat") {
+                                  handleOpenDialog("today");
+                                }
+                              }}
+                            >
+                              <Box display="flex" alignItems="center" gap={1}>
+                                <Box>
+                                  <Typography
+                                    fontWeight="bold"
+                                    fontSize={16}
+                                    sx={{
+                                      color: "var(--c_letter)",
+                                      display: "flex",
+                                      alignItems: "center",
+                                    }}
+                                  >
+                                    {item.icon} {item.title}
+                                  </Typography>
+                                  <Box
+                                    sx={{
+                                      fontSize: 36,
+                                      fontWeight: "bold",
+                                      marginLeft: "20px",
+                                    }}
+                                  >
+                                    {item.title !== "Cuộc Trò Chuyện" && (
+                                      <p
+                                        style={{
+                                          color: "var(--c_letter)",
+                                          fontSize: 12,
+                                          marginTop: "10px",
+                                          marginBottom: "10px",
+                                        }}
+                                      ></p>
+                                    )}
+                                    {item.value}
+                                  </Box>
+                                </Box>
+                              </Box>
+                            </Paper>
+                          </Grid>
+                        ))}
+                      </Grid>
                     </Grid>
                   </Grid>
                 </Grid>

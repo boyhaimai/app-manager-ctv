@@ -7,6 +7,28 @@
   overflow: hidden;
   box-sizing: border-box;
   position: relative;
+  display: block;
+}
+.wrapper_sidebar_mobile {
+  width: 100%;
+  height: 60px;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  background: var(--b_liner);
+  box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+  display: none;
+}
+
+/* Khi xuống mobile (dưới 960px) thì đảo ngược */
+@media (max-width: 960px) {
+  .wrapper {
+    display: none; /* ẩn sidebar dọc */
+  }
+  .wrapper_sidebar_mobile {
+    display: block; /* hiện bottom bar */
+  }
 }
 .title {
   font-size: 16px;
@@ -49,7 +71,7 @@
 .avatar {
   width: 36px !important;
   height: 36px !important;
-  position: relative; 
+  position: relative;
 }
 .avatar::before {
   content: "";

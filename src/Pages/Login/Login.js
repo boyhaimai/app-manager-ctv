@@ -117,7 +117,14 @@ function Login() {
           localStorage.setItem("token", result.token);
         }
         localStorage.setItem("phone", phone);
-        setTimeout(() => navigate("/manager-page"), 1500); // delay để user thấy thông báo
+        setTimeout(() => navigate("/manager-page"), 1500);
+      } else {
+        // ❌ Trường hợp sai mật khẩu hoặc thất bại
+        setSnackbar({
+          open: true,
+          message: result.message || "Sai tài khoản hoặc mật khẩu",
+          severity: "error",
+        });
       }
     } catch (error) {
       setIsLoading(false);
