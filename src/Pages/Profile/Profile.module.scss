@@ -1,0 +1,45 @@
+.wrapper {
+  margin: 15px 15px 15px 0;
+  box-sizing: border-box;
+  height: calc(100% - 30px);
+  width: calc(100% - 15px);
+  border-radius: 8px;
+  overflow: hidden;
+  background-color: var(--c_white);
+  color: var(--c_letter);
+  overflow-y: auto;
+  position: relative;
+}
+.title_header {
+  padding: 16px;
+  border-bottom: 1px solid #d9dbe4 !important;
+  background: var(--b_liner);
+  color: var(--layer_background);
+  width: 100%;
+  line-height: 25px;
+  position: absolute;
+  top: 15px;
+  left: 0;
+  z-index: 999;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: fixed;
+  border-radius: 8px 8px 0 0;
+}
+.title {
+  font-size: 16px;
+  font-weight: bold;
+  color: var(--c_letter);
+  align-items: center;
+}
+.link_change_password {
+  font-size: 14px;
+  color: var(--c_red_light) !important;
+  cursor: pointer;
+  margin-left: 25px;
+}
+.icon_hide {
+  font-size: 20px !important;
+  margin-right: 10px !important;
+}

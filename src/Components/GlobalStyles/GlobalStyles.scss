@@ -1,0 +1,170 @@
+@import "normalize.css";
+@import url("https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,100;0,300;0,400;0,700;0,900;1,100;1,300;1,400;1,700;1,900&display=swap");
+
+:root {
+  --background-default: #f7f8fa;
+  --background-paper: #fff;
+  --text-primary: #1e1e1e;
+  --text-secondary: #909298;
+
+  --font-body: "zalo-font", sans-serif;
+  --font-size: 1.4rem;
+  --padding: 10px;
+  --line-height: 1.5;
+  --box_shadow: 0px 1px 1px rgb(0 0 0 / 12%);
+  --border_radius: 8px;
+
+  // frame
+  --height_header_chat: 68px;
+  --height_header_chat_mb: 44px;
+  --height_write_message: 91.6px;
+  --height_box_icon_chat: 40.8px;
+  --height_input_chat: 54px;
+  --width_sibar: 210px; // width sidebar
+  --width_box_chat: 738px; //pc
+  --heigh_box_chat: 695.2px; // height pc defaul
+  --heigh_box_chat_mb: 620px; // heightmobile defaul
+  --width_box_chat_mb: 360px; // width mobile
+  --height_status_bar: 31px;
+  --height_box_chat: 533px;
+
+  // background colors
+
+  --layer_background: #fff;
+  --background_keep_bar_scroll: #b5b5b5;
+
+  //colors
+  --text_color: #081b3a;
+  --c_boder: rgba(0, 0, 0, 0.15);
+  --c_icon: #5a6981; //text secondary
+  --c_active: #37b361;
+  --c_active_hover: #37b361d1;
+  --border: rgba(0, 0, 0, 0.1);
+  --black: #000;
+  --c_white: #fff;
+  --c_red_light: rgb(254, 44, 85);
+  --c_aqua: #10e6d4;
+  --c_letter: #545454;
+  --c_letter_sidebar: rgba(255, 255, 255, 0.8);
+
+  //color mb
+
+  --bg_sidebar: #262626;
+  --bg_body: #f7f7f9;
+  //shadow
+  --shadow_overlay: 0px 0px 1px 0px rgba(21, 39, 71, 0.3),
+    0px 8px 12px 0px rgba(21, 39, 71, 0.15);
+
+  // font
+  --lato_font: "Lato", sans-serif;
+
+  --b_liner: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  // --b_liner_2: linear-gradient(135deg, #667eea 0%, #764ba2 100%)
+}
+
+[data-theme="dark"] {
+  --background-default: #0f172a;
+  --background-paper: #1e293b;
+  --text-primary: #fff;
+  --text-secondary: #b0b0b0;
+}
+
+html,
+body {
+  overflow: hidden; /* Ẩn thanh cuộn mặc định */
+  height: 100%; /* Đảm bảo body chiếm full màn hình */
+  background-color: var(--bg_body);
+  font-size: var(--font-size);
+  font-family: var(--lato_font);
+  line-height: var(--line-height);
+  text-rendering: optimizeSpeed;
+  color: var(--c_letter);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+// custom_button
+button,
+input,
+[tabindex] {
+  outline: none;
+  border: none;
+}
+
+input::-ms-reveal,
+// Dành cho input[type="password"].
+// Điều khiển biểu tượng 👁 (eye icon) cho phép người dùng hiển thị hoặc ẩn mật khẩu.
+// Mặc định, khi nhập mật khẩu, Edge hiển thị một biểu tượng mắt nhỏ trong ô nhập liệu.
+input::-ms-clear
+// Dành cho input[type="text"].
+// Điều khiển biểu tượng ❌ (clear icon) xuất hiện khi người dùng nhập vào ô input.
+// Khi nhấn vào biểu tượng này, toàn bộ nội dung trong input sẽ bị xóa.
+{
+  display: none;
+}
+
+// custom_a
+a {
+  color: var(--ui_color) !important;
+  text-decoration: none !important;
+}
+
+// custom ul
+ul {
+  list-style: none;
+}
+// css Scroll-bar
+html ::-webkit-scrollbar {
+  border-radius: 0px;
+  width: 8px;
+}
+
+html ::-webkit-scrollbar-thumb {
+  border-radius: 4px;
+  background-color: rgba(22, 24, 35, 0.06);
+}
+
+html ::-webkit-scrollbar-track {
+  border-radius: 0px;
+}
+
+/* global.css */
+@keyframes typing {
+  0%,
+  80%,
+  100% {
+    transform: scale(0.8);
+    opacity: 0.3;
+  }
+  40% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.typing-indicator {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 8px; /* Giảm padding để nhỏ gọn hơn */
+}
+
+.typing-dot {
+  width: 4px; /* Giảm từ 6px xuống 4px */
+  height: 4px; /* Giảm từ 6px xuống 4px */
+  background-color: #fff;
+  border-radius: 50%;
+  animation: typing 1s infinite ease-in-out;
+}
+
+.typing-dot:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.typing-dot:nth-child(3) {
+  animation-delay: 0.4s;
+}

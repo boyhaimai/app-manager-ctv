@@ -1,0 +1,75 @@
+.wrapper {
+  padding: 15px;
+  border-right: 1px solid #ccc;
+  height: 100%;
+  overflow-y: auto;
+}
+
+.title {
+  font-size: 25px;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.ctv-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.ctv-item {
+  margin-bottom: 10px;
+
+  &.active .ctv-link {
+    background-color: #ebecf0;
+    color: white;
+    border-left: 3px solid #007bff;
+
+    &:hover {
+      background-color: #ebecf092;
+    }
+  }
+}
+
+.ctv-link {
+  display: flex;
+  align-items: center;
+  padding: 10px;
+  text-decoration: none;
+  color: #333;
+  border-radius: 8px;
+  transition: background-color 0.2s ease-in-out;
+
+  &:hover {
+    background-color: #f0f0f0;
+  }
+}
+
+.ctv-avatar {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  margin-right: 10px;
+  object-fit: cover;
+}
+
+.ctv-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.ctv-name {
+  font-weight: bold;
+  font-size: 18px;
+}
+
+.ctv-recent-chat {
+  font-size: 14px;
+    color: #666;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 200px;
+}
+
+
