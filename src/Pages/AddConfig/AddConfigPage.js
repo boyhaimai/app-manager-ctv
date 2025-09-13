@@ -62,6 +62,18 @@ function AddConfigPage() {
         body: JSON.stringify(form),
       });
 
+      // ⚠️ Check hết token
+      if (res.status === 401 || res.status === 403) {
+        setSnackbar({
+          open: true,
+          message: "Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại.",
+          severity: "error",
+        });
+        localStorage.removeItem("token");
+        setTimeout(() => navigate("/"), 2000);
+        return;
+      }
+
       const text = await res.text();
       let data;
       try {

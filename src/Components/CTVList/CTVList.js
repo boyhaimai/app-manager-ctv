@@ -9,7 +9,7 @@ const cx = classNames.bind(styles);
 const urlGetConfigWithId =
   "https://wf.mkt04.vawayai.com/webhook/get_config_with_id";
 
-function CTVList() {
+function CTVList({ onSelect }) {
   const [ctvData, setCtvData] = useState([]);
   const { configId, ctvId } = useParams();
   const { setConfig } = useConfig(); // 👈 lấy setConfig từ context
@@ -72,9 +72,11 @@ function CTVList() {
             <Link
               to={`/chat-manager/${configId}/${ctv.id}`}
               className={cx("ctv-link")}
+              onClick={onSelect}
             >
               <img
-                src={ctv.avatar}
+                // src={ctv.avatar}
+                src="https://scontent.fhan2-3.fna.fbcdn.net/v/t1.30497-1/453178253_471506465671661_2781666950760530985_n.png?stp=dst-png_s200x200&_nc_cat=1&ccb=1-7&_nc_sid=136b72&_nc_eui2=AeGxjKmHmpEethSdohcuF97BWt9TLzuBU1Ba31MvO4FTUGKAJ1layeJ0SYNPOMhe-91l7wJKBeGi4_GeaTxz-TPJ&_nc_ohc=7CsbLZRM9FQQ7kNvwH1Y70c&_nc_oc=AdkPJ4G5Y4jPn-lkDZAr2Cv3Wv1mxaYLVHvrdGtFnkxexY8pIrnyoatN3VyvjdBKyNE&_nc_zt=24&_nc_ht=scontent.fhan2-3.fna&oh=00_AfbE1Lo8mCHsGMn8vbGaWodq_uANVoEv2TS4x-VVuSWqDw&oe=68EC4DBA"
                 alt={ctv.name}
                 className={cx("ctv-avatar")}
               />

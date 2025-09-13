@@ -7,7 +7,6 @@ import {
   Divider,
   Alert,
   Snackbar,
-  Avatar,
   InputAdornment,
   IconButton,
 } from "@mui/material";
@@ -79,9 +78,6 @@ function Profile() {
 
   // eslint-disable-next-line no-unused-vars
   const [loading, setLoading] = useState(true);
-  // uploading state is removed as local file uploads are no longer supported
-  // eslint-disable-next-line no-unused-vars
-  const [imageLoaded, setImageLoaded] = useState(false);
 
   useEffect(() => {
     const fetchAccountInfo = async () => {
@@ -96,6 +92,18 @@ function Profile() {
             Authorization: `Bearer ${token}`,
           },
         });
+
+        // ⚠️ Kiểm tra token hết hạn ngay sau khi gọi fetch
+        if (res.status === 401 || res.status === 403) {
+          setSnackbar({
+            open: true,
+            message: "Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại.",
+            severity: "error",
+          });
+          localStorage.removeItem("token");
+          setTimeout(() => (window.location.href = "/"), 2000);
+          return;
+        }
 
         const text = await res.text();
         let data;
@@ -137,10 +145,20 @@ function Profile() {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({
-          name: adminInfo.name,
-        }),
+        body: JSON.stringify({ name: adminInfo.name }),
       });
+
+      // ⚠️ Check hết token
+      if (res.status === 401 || res.status === 403) {
+        setSnackbar({
+          open: true,
+          message: "Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại.",
+          severity: "error",
+        });
+        localStorage.removeItem("token");
+        setTimeout(() => (window.location.href = "/"), 2000);
+        return;
+      }
 
       const text = await res.text();
       let data;
@@ -156,13 +174,11 @@ function Profile() {
       }
 
       const result = Array.isArray(data) ? data[0] : data;
-
       if (result && result.name_customer) {
         setAdminInfo({
           name: result.name_customer,
           phoneNumber: result.phone,
         });
-
         setSnackbar({
           open: true,
           message: "Cập nhật tên thành công",
@@ -238,6 +254,18 @@ function Profile() {
         }),
       });
 
+      // ⚠️ Check hết token
+      if (res.status === 401 || res.status === 403) {
+        setSnackbar({
+          open: true,
+          message: "Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại.",
+          severity: "error",
+        });
+        localStorage.removeItem("token");
+        setTimeout(() => (window.location.href = "/"), 2000);
+        return;
+      }
+
       const text = await res.text();
       let data;
       try {
@@ -252,7 +280,6 @@ function Profile() {
       }
 
       const result = Array.isArray(data) ? data[0] : data;
-
       if (result.success) {
         setSnackbar({
           open: true,

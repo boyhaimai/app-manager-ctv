@@ -6,10 +6,11 @@ import Box from "@mui/material/Box";
 import IconButton from "@mui/material/IconButton";
 import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
+import { Alert, Snackbar } from "@mui/material";
 
 import styles from "./Login.module.scss";
 import classNames from "classnames/bind";
-import { Alert, Snackbar } from "@mui/material";
+import vazoai from "~/Components/assets/image/vazoAI (1).png";
 
 const cx = classNames.bind(styles);
 
@@ -204,6 +205,7 @@ function Login() {
     <div className={styles.loginContainer}>
       <div className={styles.loginBox}>
         <div className={styles.loginHeader}>
+          <img src={vazoai} alt="logo" className={cx('logo')} />
           <h1 className={styles.title}>
             {value === 0 ? "Đăng nhập" : "Đăng ký"}
           </h1>

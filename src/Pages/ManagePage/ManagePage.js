@@ -110,6 +110,19 @@ function ManagePage() {
           },
           body: JSON.stringify({}),
         });
+
+        // ✅ nếu token hết hạn hoặc bị chặn
+        if (res.status === 401 || res.status === 403) {
+          setSnackbar({
+            open: true,
+            message: "Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại.",
+            severity: "error",
+          });
+          localStorage.removeItem("token");
+          setTimeout(() => navigate("/"), 2000);
+          return;
+        }
+
         const text = await res.text();
         let data;
         try {
@@ -118,26 +131,20 @@ function ManagePage() {
           console.error("Phản hồi không hợp lệ:", text);
           return;
         }
+
         if (Array.isArray(data)) {
           setConfigs(data);
-
-          // ✅ tự động chọn config đầu tiên
-          if (data.length > 0) {
-            handleSelectConfig(data[0]);
-          }
+          if (data.length > 0) handleSelectConfig(data[0]);
         } else if (data.configs) {
           setConfigs(data.configs);
-
-          // ✅ tự động chọn config đầu tiên
-          if (data.configs.length > 0) {
-            handleSelectConfig(data.configs[0]);
-          }
+          if (data.configs.length > 0) handleSelectConfig(data.configs[0]);
         }
       } catch (err) {
         console.error("Lỗi khi load configs:", err);
       }
     };
     fetchConfigs();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Tách riêng logic chọn config để tái sử dụng
@@ -212,7 +219,21 @@ function ManagePage() {
         },
         body: JSON.stringify(selectedConfig),
       });
+
+      // ⚠️ Check token hết hạn hoặc không hợp lệ
+      if (res.status === 401 || res.status === 403) {
+        setSnackbar({
+          open: true,
+          message: "Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại.",
+          severity: "error",
+        });
+        localStorage.removeItem("token");
+        setTimeout(() => navigate("/"), 2000);
+        return;
+      }
+
       const data = await res.json();
+
       if (res.ok) {
         setConfigs((prev) =>
           prev.map((cfg) =>
@@ -240,7 +261,7 @@ function ManagePage() {
     }
   };
 
-  const handleDeleteConfig = async (id) => {
+  const handleDeleteConfig = async () => {
     try {
       const token = localStorage.getItem("token");
       const res = await fetch(urlDeleteConfig, {
@@ -249,33 +270,46 @@ function ManagePage() {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ id }),
+        body: JSON.stringify({ id: deleteId }),
       });
 
-      const data = await res.json();
-      const result = Array.isArray(data) ? data[0] : data;
-
-      if (res.ok && result.success) {
-        setConfigs((prev) => prev.filter((cfg) => cfg.id !== id));
-        if (selectedConfig?.id === id) setSelectedConfig(null);
+      // ⚠️ Check token hết hạn hoặc không hợp lệ
+      if (res.status === 401 || res.status === 403) {
         setSnackbar({
           open: true,
-          message: result.message || "Xóa config thành công",
+          message: "Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại.",
+          severity: "error",
+        });
+        localStorage.removeItem("token");
+        setTimeout(() => navigate("/"), 2000);
+        return;
+      }
+
+      const data = await res.json();
+
+      if (res.ok) {
+        setConfigs((prev) => prev.filter((cfg) => cfg.id !== deleteId));
+        setSnackbar({
+          open: true,
+          message: "Xóa config thành công",
           severity: "success",
         });
       } else {
         setSnackbar({
           open: true,
-          message: result?.message || "Xóa config thất bại",
+          message: data.message || "Xóa config thất bại",
           severity: "error",
         });
       }
     } catch (err) {
       setSnackbar({
         open: true,
-        message: "Có lỗi xảy ra khi xoá config.",
+        message: "Có lỗi xảy ra khi xóa config.",
         severity: "error",
       });
+    } finally {
+      setConfirmOpen(false);
+      setDeleteId(null);
     }
   };
 
@@ -389,9 +423,6 @@ function ManagePage() {
               <MenuItem
                 onClick={() => {
                   handleMenuClose();
-                  // navigate to add-config via Link: we use window.location or push
-                  // but better to use Link inside the MenuItem — we'll trigger navigate
-                  // using JS to keep it simple:
                   window.location.href = "/add-config";
                 }}
               >
@@ -622,18 +653,6 @@ function ManagePage() {
                     </Paper>
 
                     <Grid xs={12} md={6} item sx={{ mt: 3 }}>
-                      {/* <Grid
-                        container
-                        spacing={2}
-                        item
-                        sx={{
-                          mb: 3,
-                          display: "flex",
-                          justifyContent: "space-between",
-                          flexWrap: "wrap",
-                          width: "48%",
-                        }}
-                      > */}
                       <Grid container spacing={2}>
                         {[
                           {
@@ -774,13 +793,6 @@ function ManagePage() {
                             color: "#D81B60",
                           },
                         ].map((item, idx) => (
-                          // <Grid
-                          //   item
-                          //   key={idx}
-                          //   xs={12}
-                          //   sm={6}
-                          //   sx={{ width: "48%" }}
-                          // >
                           <Grid item xs={12} sm={6} key={idx}>
                             <Paper
                               elevation={2}
@@ -1053,6 +1065,24 @@ function ManagePage() {
           {snackbar.message}
         </Alert>
       </Snackbar>
+
+      <Dialog open={confirmOpen} onClose={() => setConfirmOpen(false)}>
+        <DialogTitle sx={{ fontWeight: 600 }}>Xác nhận xoá</DialogTitle>
+        <DialogContent sx={{ fontSize: 20, ml: 3 }}>Bạn có chắc chắn muốn xoá config này?</DialogContent>
+        <DialogActions>
+          <Button onClick={() => setConfirmOpen(false)} color="inherit" sx={{ textTransform: "none" }}>
+            Huỷ
+          </Button>
+          <Button
+            onClick={handleDeleteConfig}
+            color="error"
+            variant="contained" 
+            sx={{ textTransform: "none" }}
+          >
+            Xoá
+          </Button>
+        </DialogActions>
+      </Dialog>
     </div>
   );
 }
