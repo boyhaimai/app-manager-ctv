@@ -289,6 +289,12 @@ function ManagePage() {
 
       if (res.ok) {
         setConfigs((prev) => prev.filter((cfg) => cfg.id !== deleteId));
+
+        // ✅ reset selectedConfig nếu nó là config vừa xoá
+        if (selectedConfig?.id === deleteId) {
+          setSelectedConfig(null);
+        }
+
         setSnackbar({
           open: true,
           message: "Xóa config thành công",
@@ -1068,15 +1074,21 @@ function ManagePage() {
 
       <Dialog open={confirmOpen} onClose={() => setConfirmOpen(false)}>
         <DialogTitle sx={{ fontWeight: 600 }}>Xác nhận xoá</DialogTitle>
-        <DialogContent sx={{ fontSize: 20, ml: 3 }}>Bạn có chắc chắn muốn xoá config này?</DialogContent>
+        <DialogContent sx={{ fontSize: 20, ml: 3 }}>
+          Bạn có chắc chắn muốn xoá config này?
+        </DialogContent>
         <DialogActions>
-          <Button onClick={() => setConfirmOpen(false)} color="inherit" sx={{ textTransform: "none" }}>
+          <Button
+            onClick={() => setConfirmOpen(false)}
+            color="inherit"
+            sx={{ textTransform: "none" }}
+          >
             Huỷ
           </Button>
           <Button
             onClick={handleDeleteConfig}
             color="error"
-            variant="contained" 
+            variant="contained"
             sx={{ textTransform: "none" }}
           >
             Xoá
