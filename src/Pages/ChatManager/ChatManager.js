@@ -134,11 +134,11 @@ function ChatManager() {
     const msgs = await getMessages(conversation.id_nick_zalo, conversation.id);
 
     const mapped = msgs.map((m, index) => ({
-      id: m.id || index, // fallback index nếu không có id
+      id: m.id || index,
       text: m.content,
-      sender: m.is_selt === "true" ? "me" : "other", // dùng is_selt để phân biệt
+      sender: m.is_selt === "true" ? "me" : "other",
       time: new Date(Number(m.time)).toLocaleString("vi-VN"),
-      avatar: "/default-avatar.png",
+      avatar: m.avatar || "/default-avatar.png", // ✅ dùng avatar từ API
       isSystemMessage: false,
     }));
 
@@ -281,8 +281,8 @@ function ChatManager() {
                         >
                           <div className={cx("avatar-container")}>
                             <img
-                              src=" https://scontent.fhan2-3.fna.fbcdn.net/v/t1.30497-1/453178253_471506465671661_2781666950760530985_n.png?stp=dst-png_s200x200&_nc_cat=1&ccb=1-7&_nc_sid=136b72&_nc_eui2=AeGxjKmHmpEethSdohcuF97BWt9TLzuBU1Ba31MvO4FTUGKAJ1layeJ0SYNPOMhe-91l7wJKBeGi4_GeaTxz-TPJ&_nc_ohc=7CsbLZRM9FQQ7kNvwH1Y70c&_nc_oc=AdkPJ4G5Y4jPn-lkDZAr2Cv3Wv1mxaYLVHvrdGtFnkxexY8pIrnyoatN3VyvjdBKyNE&_nc_zt=24&_nc_ht=scontent.fhan2-3.fna&oh=00_AfbE1Lo8mCHsGMn8vbGaWodq_uANVoEv2TS4x-VVuSWqDw&oe=68EC4DBA"
-                              alt=" "
+                              src={conversation.avatar}
+                              alt={conversation.name}
                             />
                           </div>
                           <div className={cx("conversation-info")}>
@@ -390,11 +390,7 @@ function ChatManager() {
                             {/* Chat Header */}
                             <div className={cx("chat-header")}>
                               <div className={cx("chat-header-left")}>
-                                <img
-                                  // src={chat.avatar} alt={chat.name}
-                                  src=" https://scontent.fhan2-3.fna.fbcdn.net/v/t1.30497-1/453178253_471506465671661_2781666950760530985_n.png?stp=dst-png_s200x200&_nc_cat=1&ccb=1-7&_nc_sid=136b72&_nc_eui2=AeGxjKmHmpEethSdohcuF97BWt9TLzuBU1Ba31MvO4FTUGKAJ1layeJ0SYNPOMhe-91l7wJKBeGi4_GeaTxz-TPJ&_nc_ohc=7CsbLZRM9FQQ7kNvwH1Y70c&_nc_oc=AdkPJ4G5Y4jPn-lkDZAr2Cv3Wv1mxaYLVHvrdGtFnkxexY8pIrnyoatN3VyvjdBKyNE&_nc_zt=24&_nc_ht=scontent.fhan2-3.fna&oh=00_AfbE1Lo8mCHsGMn8vbGaWodq_uANVoEv2TS4x-VVuSWqDw&oe=68EC4DBA"
-                                  alt={chat.name}
-                                />
+                                <img src={chat.avatar} alt={chat.name} />
                                 <div className={cx("chat-info")}>
                                   <span className={cx("chat-name")}>
                                     {chat.name}
@@ -565,8 +561,8 @@ function ChatManager() {
                         >
                           <div className={cx("avatar-container")}>
                             <img
-                              src=" https://scontent.fhan2-3.fna.fbcdn.net/v/t1.30497-1/453178253_471506465671661_2781666950760530985_n.png?stp=dst-png_s200x200&_nc_cat=1&ccb=1-7&_nc_sid=136b72&_nc_eui2=AeGxjKmHmpEethSdohcuF97BWt9TLzuBU1Ba31MvO4FTUGKAJ1layeJ0SYNPOMhe-91l7wJKBeGi4_GeaTxz-TPJ&_nc_ohc=7CsbLZRM9FQQ7kNvwH1Y70c&_nc_oc=AdkPJ4G5Y4jPn-lkDZAr2Cv3Wv1mxaYLVHvrdGtFnkxexY8pIrnyoatN3VyvjdBKyNE&_nc_zt=24&_nc_ht=scontent.fhan2-3.fna&oh=00_AfbE1Lo8mCHsGMn8vbGaWodq_uANVoEv2TS4x-VVuSWqDw&oe=68EC4DBA"
-                              alt=" "
+                              src={conversation.avatar}
+                              alt={conversation.name}
                             />
                           </div>
                           <div className={cx("conversation-info")}>
@@ -641,11 +637,7 @@ function ChatManager() {
                         {/* Chat Header */}
                         <div className={cx("chat-header")}>
                           <div className={cx("chat-header-left")}>
-                            <img
-                              // src={chat.avatar} alt={chat.name}
-                              src=" https://scontent.fhan2-3.fna.fbcdn.net/v/t1.30497-1/453178253_471506465671661_2781666950760530985_n.png?stp=dst-png_s200x200&_nc_cat=1&ccb=1-7&_nc_sid=136b72&_nc_eui2=AeGxjKmHmpEethSdohcuF97BWt9TLzuBU1Ba31MvO4FTUGKAJ1layeJ0SYNPOMhe-91l7wJKBeGi4_GeaTxz-TPJ&_nc_ohc=7CsbLZRM9FQQ7kNvwH1Y70c&_nc_oc=AdkPJ4G5Y4jPn-lkDZAr2Cv3Wv1mxaYLVHvrdGtFnkxexY8pIrnyoatN3VyvjdBKyNE&_nc_zt=24&_nc_ht=scontent.fhan2-3.fna&oh=00_AfbE1Lo8mCHsGMn8vbGaWodq_uANVoEv2TS4x-VVuSWqDw&oe=68EC4DBA"
-                              alt={chat.name}
-                            />
+                            <img src={chat.avatar} alt={chat.name} />
                             <div className={cx("chat-info")}>
                               <span className={cx("chat-name")}>
                                 {chat.name}
