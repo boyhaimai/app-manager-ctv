@@ -1,22 +1,30 @@
 .loginContainer {
-  min-height: 100vh;
   display: flex;
-  align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  padding: 20px;
-  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  align-items: center;
+  min-height: 100vh;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+
+  padding: 16px; /* để có khoảng trống khi thu nhỏ màn hình */
 }
 
 .loginBox {
-  background: white;
-  border-radius: 20px;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-  padding: 40px;
+  background: #fff;
+  border-radius: 16px;
+  padding: 24px;
   width: 100%;
   max-width: 400px;
-  animation: slideUp 0.6s ease-out;
+  max-height: 90vh;     /* giới hạn chiều cao tối đa 90% màn hình */
+  overflow-y: auto;     /* cho cuộn dọc khi nội dung quá dài */
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+
+  /* Tùy chọn: làm scrollbar gọn gàng */
+  scrollbar-width: thin;
+  scrollbar-color: #999 transparent;
 }
+
 
 @keyframes slideUp {
   from {
