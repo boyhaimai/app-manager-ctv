@@ -226,6 +226,15 @@ function ChatManager() {
           <>
             {mobileView === "ctv" && (
               <div className={cx("mobile-ctv")}>
+                <div className={cx("wrapper-header-mobile")}>
+                  <button
+                    className={cx("back-button")}
+                    onClick={() => navigate("/manager-page")}
+                  >
+                    <ArrowBack fontSize="small" />
+                    Quay lại trang quan lý
+                  </button>
+                </div>
                 <CTVList onSelect={() => setMobileView("conversation")} />
               </div>
             )}

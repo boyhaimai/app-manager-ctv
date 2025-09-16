@@ -65,11 +65,15 @@
 
 .ctv-recent-chat {
   font-size: 14px;
-    color: #666;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 200px;
+  color: #666;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 200px;
 }
 
-
+@media (max-width: 768px) {
+  .wrapper {
+    width: 100%;
+  }
+}

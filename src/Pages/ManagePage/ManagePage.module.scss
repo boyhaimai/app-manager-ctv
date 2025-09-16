@@ -55,3 +55,14 @@
   align-items: center;
   z-index: 2000;
 }
+@media (max-width: 768px) {
+  .wrapper {
+    width: 100%;
+    margin: 0;
+  }
+  .title_header {
+    width: 100%;
+    left: 0px;
+    top: 0;
+  }
+}
