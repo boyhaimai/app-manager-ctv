@@ -692,9 +692,16 @@
 .chat-messages::-webkit-scrollbar-thumb:hover {
   background: rgba(0, 0, 0, 0.3);
 }
+  .wrapper-header-mobile{
+    background: var(--b_liner) !important;
+    padding: 10px;
+  }
 
 /* Responsive */
 @media (max-width: 768px) {
+  .header{
+    background-image: var(--b_liner);
+  }
  .mobile-header{
   display: flex;
   justify-content: space-between;
@@ -706,6 +713,7 @@
   position: relative; // Đảm bảo tạo stacking context
   z-index: 2000;
   width: 100%;
+
  }
  .chat-mobile{
   height: calc(100vh - 90px - 20px); /* trừ header và padding */
@@ -723,9 +731,9 @@
 }
 
 .back-button {
-  background: rgba(255, 255, 255, 0.2);
+  background: var(--b_liner);
   border: none;
-  color: white;
+  color: white !important;
   padding: 8px 12px;
   border-radius: 6px;
   cursor: pointer;

@@ -163,12 +163,15 @@ function ChatManager() {
     const updatedChats = openChats.filter((chat) => chat.id !== chatId);
     setOpenChats(updatedChats);
 
-    // Nếu chat đang đóng là chat active, chuyển active sang chat khác hoặc null
     if (activeChat === chatId) {
       if (updatedChats.length > 0) {
         setActiveChat(updatedChats[updatedChats.length - 1].id);
       } else {
         setActiveChat(null);
+        // 👇 Chuyển về danh sách hội thoại nếu ở mobile
+        if (isMobile()) {
+          setMobileView("conversation");
+        }
       }
     }
   };
@@ -229,12 +232,14 @@ function ChatManager() {
 
             {mobileView === "conversation" && (
               <div className={cx("mobile-conversation")}>
-                <button
-                  className={cx("back-button")}
-                  onClick={() => setMobileView("ctv")}
-                >
-                  <ArrowBack /> Quay lại CTV
-                </button>
+                <div className={cx("wrapper-header-mobile")}>
+                  <button
+                    className={cx("back-button")}
+                    onClick={() => setMobileView("ctv")}
+                  >
+                    <ArrowBack /> Quay lại CTV
+                  </button>
+                </div>
                 {/* danh sách hội thoại */}
                 {ctvId && (
                   <div className={cx("conversation-section")}>
@@ -325,12 +330,11 @@ function ChatManager() {
                       onClick={() => setMobileView("conversation")}
                       variant="contained"
                       sx={{
-                        color: "black !important",
                         backgroundColor: "#764ba2",
                         marginBottom: "10px",
                       }}
                     >
-                      <ArrowBack sx={{ color: "black" }} />
+                      <ArrowBack sx={{ color: "#fff" }} />
                     </Button>
                     <button
                       className={cx("back-button")}
@@ -350,6 +354,11 @@ function ChatManager() {
                         // Clear localStorage
                         localStorage.removeItem("openChats");
                         localStorage.removeItem("activeChat");
+
+                        // 👇 Thêm dòng này để tránh trắng màn
+                        if (isMobile()) {
+                          setMobileView("conversation");
+                        }
                       }}
                     >
                       <i className="fas fa-times-circle"></i>
@@ -482,7 +491,7 @@ function ChatManager() {
           <div className={cx("chat-manager")}>
             {/* Header luôn hiển thị */}
             <div className={cx("header")}>
-              <div className={cx("header-left")}>
+              <div className={cx("header-left", "desktop-header")}>
                 <button
                   className={cx("back-button")}
                   onClick={() => navigate("/manager-page")}
