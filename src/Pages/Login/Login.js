@@ -189,6 +189,12 @@ function Login() {
         });
         setValue(0);
         setTimeout(() => navigate("/"), 1500);
+      } else {
+        setSnackbar({
+          open: true,
+          message: result.message || "Đăng ký thất bại. Vui lòng thử lại.",
+          severity: "error",
+        });
       }
     } catch (error) {
       setIsLoading(false);
@@ -205,7 +211,7 @@ function Login() {
     <div className={styles.loginContainer}>
       <div className={styles.loginBox}>
         <div className={styles.loginHeader}>
-          <img src={vazoai} alt="logo" className={cx('logo')} />
+          <img src={vazoai} alt="logo" className={cx("logo")} />
           <h1 className={styles.title}>
             {value === 0 ? "Đăng nhập" : "Đăng ký"}
           </h1>
