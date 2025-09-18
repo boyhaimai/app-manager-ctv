@@ -1,0 +1,831 @@
+import { useEffect, useRef, useState } from "react";
+import {
+  Card,
+  CardHeader,
+  CardContent,
+  Button,
+  Chip as Badge,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableRow,
+  Menu,
+  MenuItem,
+  Typography,
+  Box,
+  TextField,
+  Switch,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Snackbar,
+  Alert,
+} from "@mui/material";
+import classNames from "classnames/bind";
+import {
+  ChevronDown,
+  Users,
+  UserCheck,
+  Shield,
+  Eye,
+  EllipsisVertical,
+  Ban,
+  LockOpen,
+} from "lucide-react";
+
+import styles from "./admin.module.scss";
+import {
+  Close,
+  Delete,
+  KeyboardArrowRight,
+  RadioButtonChecked,
+  Search,
+} from "@mui/icons-material";
+
+const cx = classNames.bind(styles);
+
+const urlGetInfoAdmin = "https://wf.mkt04.vawayai.com/webhook/admin";
+const urlUpdateBloack = "https://wf.mkt04.vawayai.com/webhook/update_banded";
+const urlDeleteAccount = "https://wf.mkt04.vawayai.com/webhook/delete_account";
+const urlSetRole = "https://wf.mkt04.vawayai.com/webhook/set_role";
+const urlUpdateExpire =
+  "https://wf.mkt04.vawayai.com/webhook/update_expire";
+
+const roleMap = {
+  0: { label: "Admin", icon: Shield, color: "error" },
+  1: { label: "Quản lý", icon: UserCheck, color: "primary" },
+  2: { label: "Người xem", icon: Eye, color: "default" },
+};
+
+const expireOptions = {
+  "2 tuần": 14 * 24 * 60 * 60 * 1000,
+  "3 tháng": 90 * 24 * 60 * 60 * 1000,
+  "6 tháng": 180 * 24 * 60 * 60 * 1000,
+  "9 tháng": 270 * 24 * 60 * 60 * 1000,
+  "1 năm": 365 * 24 * 60 * 60 * 1000,
+};
+
+const AdminDashboard = () => {
+  const [users, setUsers] = useState([]);
+  const [stats, setStats] = useState({
+    total_accounts: 0,
+    total_admin: 0,
+    total_manager: 0,
+    total_banned: 0,
+  });
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: "",
+    severity: "success", // success | error | warning | info
+  });
+  const [anchorEl, setAnchorEl] = useState(null);
+  const [selectedUser, setSelectedUser] = useState(null);
+  const wrapperRef = useRef();
+  const headerRef = useRef();
+  const [searchTerm, setSearchTerm] = useState("");
+  const [searchInput, setSearchInput] = useState("");
+  const [moreAnchorEl, setMoreAnchorEl] = useState(null);
+  const [subMenuAnchorEl, setSubMenuAnchorEl] = useState(null);
+  const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
+  const [pendingRole, setPendingRole] = useState(null);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        if (!token) return;
+
+        const res = await fetch(urlGetInfoAdmin, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        const text = await res.text();
+        let data;
+        try {
+          data = JSON.parse(text);
+        } catch {
+          console.error("Không parse được:", text);
+          return;
+        }
+
+        const result = Array.isArray(data) ? data[0]?.result : data?.result;
+        if (result) {
+          setStats({
+            total_accounts: result.total_accounts,
+            total_admin: result.total_admin,
+            total_manager: result.total_manager,
+            total_banned: result.total_banned,
+          });
+          setUsers(result.accounts || []);
+        }
+      } catch (err) {
+        console.error("Lỗi fetch admin:", err);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  useEffect(() => {
+    const resizeHeader = () => {
+      if (wrapperRef.current && headerRef.current) {
+        const wrapper = wrapperRef.current;
+        const header = headerRef.current;
+        header.style.width = `${wrapper.offsetWidth}px`;
+        header.style.left = `${wrapper.getBoundingClientRect().left}px`;
+      }
+    };
+    resizeHeader();
+    window.addEventListener("resize", resizeHeader);
+    return () => window.removeEventListener("resize", resizeHeader);
+  }, []);
+
+  const handleMenuOpen = (event, user) => {
+    setAnchorEl(event.currentTarget);
+    setSelectedUser(user);
+  };
+
+  const handleMenuClose = () => {
+    setAnchorEl(null);
+    setSelectedUser(null);
+  };
+
+  useEffect(() => {
+    const updateUserRole = async () => {
+      if (!pendingRole) return;
+
+      const { userId, role } = pendingRole;
+      const user = users.find((u) => u.id === userId);
+      if (!user) return;
+
+      const roleValue = role === "admin" ? 0 : role === "manager" ? 1 : 2;
+
+      if (user.role === roleValue) {
+        setSnackbar({
+          open: true,
+          message: `User này đã là ${roleMap[roleValue].label}`,
+          severity: "warning",
+        });
+        setPendingRole(null);
+        handleMenuClose();
+        return;
+      }
+
+      try {
+        const token = localStorage.getItem("token");
+        const res = await fetch(urlSetRole, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            user_id: userId,
+            phone: user.phone,
+            role: roleValue,
+          }),
+        });
+
+        const result = await res.json();
+        if (Array.isArray(result) && result[0]?.success) {
+          setUsers(
+            users.map((u) => (u.id === userId ? { ...u, role: roleValue } : u))
+          );
+          setSnackbar({
+            open: true,
+            message:
+              result[0]?.message ||
+              `Đổi vai trò thành công: ${roleMap[roleValue].label}`,
+            severity: "success",
+          });
+        } else {
+          setSnackbar({
+            open: true,
+            message: result[0]?.message || "Đổi vai trò thất bại",
+            severity: "error",
+          });
+        }
+      } catch (err) {
+        console.error("Lỗi set role:", err);
+        setSnackbar({
+          open: true,
+          message: "Có lỗi xảy ra khi đổi vai trò",
+          severity: "error",
+        });
+      } finally {
+        setPendingRole(null);
+        handleMenuClose();
+      }
+    };
+
+    updateUserRole();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pendingRole]);
+
+  const filteredUsers = users.filter((u) => {
+    const term = searchTerm.toLowerCase();
+    const name = u.name_customer || ""; // API trả về name_customer
+    const phone = u.phone || "";
+    const roleInfo = roleMap[u.role] || {};
+    const roleLabel = roleInfo.label ? roleInfo.label.toLowerCase() : "";
+
+    return (
+      name.toLowerCase().includes(term) ||
+      phone.includes(term) ||
+      roleLabel.includes(term)
+    );
+  });
+
+  console.log(selectedUser, "selectedUser");
+
+  const handleMoreMenuOpen = (event, user) => {
+    console.log("👉 Open menu cho user:", user);
+    setMoreAnchorEl(event.currentTarget);
+    setSelectedUser(user);
+  };
+
+  const handleMoreMenuClose = () => {
+    console.log("👉 Menu đóng");
+    setMoreAnchorEl(null);
+    // setSelectedUser(null);
+  };
+
+  const handleSubMenuClose = () => {
+    setSubMenuAnchorEl(null);
+  };
+
+  const handleOpenDeleteDialog = (user) => {
+    console.log("👉 Mở dialog xoá cho user:", user);
+    setSelectedUser(user);
+    setOpenDeleteDialog(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    console.log("👉 Confirm delete:", selectedUser);
+    if (!selectedUser) return;
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(urlDeleteAccount, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          user_id: selectedUser.id,
+          phone: selectedUser.phone,
+        }),
+      });
+
+      const result = await res.json();
+      if (result[0]?.success) {
+        setUsers(users.filter((u) => u.id !== selectedUser.id));
+        setSnackbar({
+          open: true,
+          message: "Xoá tài khoản thành công",
+          severity: "success",
+        });
+      } else {
+        console.error("API trả về lỗi:", result);
+        setSnackbar({
+          open: true,
+          message: "Xoá tài khoản thất bại",
+          severity: "error",
+        });
+      }
+    } catch (err) {
+      console.error("Lỗi xoá account:", err);
+      setSnackbar({
+        open: true,
+        message: "Có lỗi xảy ra khi xoá tài khoản",
+        severity: "error",
+      });
+    } finally {
+      setOpenDeleteDialog(false);
+      setMoreAnchorEl(null); // ✅ Đóng menu ở đây
+      setSelectedUser(null);
+    }
+  };
+
+  const handleExtendExpire = async (label) => {
+    if (!selectedUser) return;
+
+    // Nếu là admin => expire_at = "0"
+    if (selectedUser.expire_at === "0") {
+      setSnackbar({
+        open: true,
+        message: "Đây là tài khoản Admin, không cần gia hạn",
+        severity: "info",
+      });
+      return;
+    }
+
+    const extendMs = expireOptions[label];
+    if (!extendMs) return;
+
+    const currentExpire = new Date(selectedUser.expire_at);
+    const newExpire = new Date(currentExpire.getTime() + extendMs);
+
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(urlUpdateExpire, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          user_id: selectedUser.id,
+          phone: selectedUser.phone,
+          expire_at: newExpire.toISOString(),
+        }),
+      });
+
+      const result = await res.json();
+      if (Array.isArray(result) && result[0]?.success) {
+        // ✅ update state với expire mới
+        setUsers(
+          users.map((u) =>
+            u.id === selectedUser.id
+              ? { ...u, expire_at: newExpire.toISOString() }
+              : u
+          )
+        );
+
+        // format thời gian hết hạn mới
+        const formattedExpire = newExpire.toLocaleString("vi-VN", {
+          year: "numeric",
+          month: "2-digit",
+          day: "2-digit",
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+        });
+
+        setSnackbar({
+          open: true,
+          message: `Gia hạn thành công thêm ${label}. Account sẽ hết hạn vào ${formattedExpire}`,
+          severity: "success",
+        });
+      } else {
+        setSnackbar({
+          open: true,
+          message: result[0]?.message || "Gia hạn thất bại",
+          severity: "error",
+        });
+      }
+    } catch (err) {
+      console.error("Lỗi update expire:", err);
+      setSnackbar({
+        open: true,
+        message: "Có lỗi xảy ra khi gia hạn",
+        severity: "error",
+      });
+    } finally {
+      handleSubMenuClose();
+      handleMoreMenuClose();
+    }
+  };
+
+  const totalUsers = users.length;
+
+  return (
+    <div className={cx("wrapper")} ref={wrapperRef}>
+      {/* Header responsive: title left, controls collapse into menu on mobile */}
+      <Box
+        className={cx("title_header")}
+        ref={headerRef}
+        sx={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          width: "100%",
+          px: 0,
+        }}
+      >
+        {/* Title luôn hiện */}
+        <Typography
+          variant="h6"
+          sx={{
+            fontWeight: "bold",
+            fontSize: "20px",
+            color: "white",
+            ml: 2,
+          }}
+        >
+          Admin Dashboard
+        </Typography>
+      </Box>
+      <div style={{ minHeight: "100vh", padding: "24px", marginTop: "50px" }}>
+        <div style={{ width: "100%", maxWidth: "1200px" }}>
+          {/* Header */}
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              marginBottom: "24px",
+            }}
+          >
+            <div>
+              <Typography variant="body2" color="white">
+                Quản lý người dùng và phân quyền
+              </Typography>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              <Users size={18} color="white" />
+              <Typography variant="body2" color="white">
+                Tổng số tài khoản: {totalUsers}
+              </Typography>
+            </div>
+          </div>
+
+          {/* Stats Cards */}
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))",
+              gap: "16px",
+            }}
+          >
+            <Card>
+              <CardHeader title="Tổng tài khoản" />
+              <CardContent>
+                <Typography variant="h5">{stats.total_accounts}</Typography>
+                <Typography variant="caption" color="success.main">
+                  +2 từ tuần trước
+                </Typography>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader title="Admin" />
+              <CardContent>
+                <Typography variant="h5">{stats.total_admin}</Typography>
+                <Typography variant="caption">Quyền cao nhất</Typography>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader title="Quản lý" />
+              <CardContent>
+                <Typography variant="h5">{stats.total_manager}</Typography>
+                <Typography variant="caption">Quyền quản lý</Typography>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader title="Account bị chặn" />
+              <CardContent>
+                <Typography variant="h5">{stats.total_banned}</Typography>
+                <Typography variant="caption">Account Block</Typography>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Users Table */}
+          <Card style={{ marginTop: "24px" }}>
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                mb: 2,
+              }}
+            >
+              <CardHeader
+                title="Danh sách người dùng"
+                subheader="Quản lý thông tin và phân quyền cho từng tài khoản"
+              />
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px",
+                  mr: 2,
+                }}
+              >
+                <TextField
+                  size="small"
+                  variant="outlined"
+                  placeholder="Tìm kiếm..."
+                  value={searchInput}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setSearchInput(val);
+                    if (val === "") {
+                      setSearchTerm(""); // reset khi xoá hết
+                    }
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      setSearchTerm(searchInput);
+                    }
+                  }}
+                  sx={{ width: 250, borderRadius: "10px" }}
+                  InputProps={{
+                    endAdornment: searchInput && (
+                      <Button
+                        onClick={() => {
+                          setSearchInput("");
+                          setSearchTerm("");
+                        }}
+                        sx={{ minWidth: "30px" }}
+                      >
+                        <Close fontSize="10px" />
+                      </Button>
+                    ),
+                  }}
+                />
+                <Button
+                  variant="contained"
+                  onClick={() => setSearchTerm(searchInput)}
+                  sx={{
+                    minWidth: "40px",
+                    borderRadius: "8px",
+                    background: "var(--b_liner)",
+                  }}
+                >
+                  <Search fontSize="small" />
+                </Button>
+              </Box>
+            </Box>
+            <CardContent>
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Trạng thái</TableCell>
+                    <TableCell>Tên người dùng</TableCell>
+                    <TableCell>Số điện thoại</TableCell>
+                    <TableCell>Thời gian tạo</TableCell>
+                    <TableCell>Thời gian hết hạn</TableCell>
+                    <TableCell>Vai trò</TableCell>
+                    <TableCell>Thao tác</TableCell>
+                    <TableCell></TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {filteredUsers.map((user, index) => {
+                    const roleInfo = roleMap[user.role] || roleMap[2];
+                    const IconComponent = roleInfo.icon;
+                    return (
+                      <TableRow key={user.id}>
+                        <TableCell>
+                          {user.expire_at === "0" ? (
+                            <RadioButtonChecked
+                              sx={{ color: "green", fontSize: "20px" }}
+                            />
+                          ) : new Date(user.expire_at) > new Date() ? (
+                            <RadioButtonChecked
+                              sx={{ color: "green", fontSize: "20px" }}
+                            />
+                          ) : (
+                            <RadioButtonChecked
+                              sx={{ color: "red", fontSize: "20px" }}
+                            />
+                          )}
+                        </TableCell>
+                        <TableCell>{user.name_customer}</TableCell>
+                        <TableCell>{user.phone}</TableCell>
+                        <TableCell>
+                          {new Date(user.created_at).toLocaleString("vi-VN", {
+                            year: "numeric",
+                            month: "2-digit",
+                            day: "2-digit",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                            second: "2-digit",
+                          })}
+                        </TableCell>
+
+                        <TableCell>
+                          {user.expire_at === "0"
+                            ? "Vô hạn"
+                            : new Date(user.expire_at).toLocaleString("vi-VN", {
+                                year: "numeric",
+                                month: "2-digit",
+                                day: "2-digit",
+                                hour: "2-digit",
+                                minute: "2-digit",
+                                second: "2-digit",
+                              })}
+                        </TableCell>
+
+                        <TableCell>
+                          <Badge
+                            label={roleInfo.label}
+                            color={roleInfo.color}
+                            icon={<IconComponent size={14} />}
+                            variant="outlined"
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Button
+                            variant="outlined"
+                            size="small"
+                            endIcon={<ChevronDown size={16} />}
+                            onClick={(e) => handleMenuOpen(e, user)}
+                            sx={{ textTransform: "none", outline: "none" }}
+                          >
+                            Đổi vai trò
+                          </Button>
+                        </TableCell>
+                        <TableCell>
+                          <EllipsisVertical
+                            size={16}
+                            onClick={(e) => handleMoreMenuOpen(e, user)}
+                          />
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+
+                {/* More menu đặt ngoài map */}
+                <Menu
+                  anchorEl={moreAnchorEl}
+                  open={Boolean(moreAnchorEl)}
+                  onClose={handleMoreMenuClose}
+                >
+                  {/* Gia hạn có submenu */}
+                  <MenuItem
+                    onClick={(e) => setSubMenuAnchorEl(e.currentTarget)}
+                  >
+                    <LockOpen
+                      style={{ marginRight: "8px", fontSize: "20px" }}
+                    />
+                    Gia hạn
+                    <KeyboardArrowRight
+                      fontSize="small"
+                      style={{ marginLeft: "auto" }}
+                    />
+                  </MenuItem>
+
+                  {/* Submenu */}
+                  <Menu
+                    anchorEl={subMenuAnchorEl}
+                    open={Boolean(subMenuAnchorEl)}
+                    onClose={handleSubMenuClose}
+                    anchorOrigin={{
+                      vertical: "top",
+                      horizontal: "right",
+                    }}
+                    transformOrigin={{
+                      vertical: "top",
+                      horizontal: "left",
+                    }}
+                    MenuListProps={{
+                      onMouseLeave: handleSubMenuClose,
+                    }}
+                  >
+                    <MenuItem onClick={() => handleExtendExpire("2 tuần")}>
+                      2 tuần
+                    </MenuItem>
+                    <MenuItem onClick={() => handleExtendExpire("3 tháng")}>
+                      3 tháng
+                    </MenuItem>
+                    <MenuItem onClick={() => handleExtendExpire("6 tháng")}>
+                      6 tháng
+                    </MenuItem>
+                    <MenuItem onClick={() => handleExtendExpire("9 tháng")}>
+                      9 tháng
+                    </MenuItem>
+                    <MenuItem onClick={() => handleExtendExpire("1 năm")}>
+                      1 năm
+                    </MenuItem>
+                  </Menu>
+
+                  {/* Chặn tài khoản */}
+                  <MenuItem>
+                    <Ban style={{ marginRight: "8px", fontSize: "20px" }} />
+                    Chặn tài khoản này
+                    <Switch
+                      checked={selectedUser?.is_ban || false}
+                      onChange={async () => {
+                        if (!selectedUser) return;
+                        const newStatus = !selectedUser.is_ban;
+                        try {
+                          const token = localStorage.getItem("token");
+                          const res = await fetch(urlUpdateBloack, {
+                            method: "POST",
+                            headers: {
+                              "Content-Type": "application/json",
+                              Authorization: `Bearer ${token}`,
+                            },
+                            body: JSON.stringify({
+                              user_id: selectedUser.id,
+                              phone: selectedUser.phone,
+                              is_ban: newStatus,
+                            }),
+                          });
+                          const result = await res.json();
+                          if (result[0]?.success) {
+                            setUsers(
+                              users.map((u) =>
+                                u.id === selectedUser.id
+                                  ? { ...u, is_ban: newStatus }
+                                  : u
+                              )
+                            );
+                            setSelectedUser({
+                              ...selectedUser,
+                              is_ban: newStatus,
+                            });
+                          }
+                        } catch (err) {
+                          console.error("Lỗi update block:", err);
+                        }
+                      }}
+                      sx={{ ml: "auto" }}
+                    />
+                  </MenuItem>
+
+                  <MenuItem
+                    onClick={() => handleOpenDeleteDialog(selectedUser)}
+                  >
+                    <Delete style={{ marginRight: "8px", fontSize: "20px" }} />
+                    Xóa tài khoản
+                  </MenuItem>
+                </Menu>
+              </Table>
+
+              {/* Dropdown menu */}
+              <Menu
+                anchorEl={anchorEl}
+                open={Boolean(anchorEl)}
+                onClose={handleMenuClose}
+              >
+                <MenuItem
+                  onClick={() =>
+                    setPendingRole({ userId: selectedUser?.id, role: "admin" })
+                  }
+                >
+                  <Shield size={16} style={{ marginRight: "8px" }} /> Admin
+                </MenuItem>
+                <MenuItem
+                  onClick={() =>
+                    setPendingRole({
+                      userId: selectedUser?.id,
+                      role: "manager",
+                    })
+                  }
+                >
+                  <UserCheck size={16} style={{ marginRight: "8px" }} /> Quản lý
+                </MenuItem>
+
+                {/* <MenuItem
+                  onClick={() => updateUserRole(selectedUser?.id, "viewer")}
+                >
+                  <Eye size={16} style={{ marginRight: "8px" }} /> Người xem
+                </MenuItem> */}
+              </Menu>
+            </CardContent>
+          </Card>
+          <Dialog
+            open={openDeleteDialog}
+            onClose={() => setOpenDeleteDialog(false)}
+          >
+            <DialogTitle>Xác nhận xoá</DialogTitle>
+            <DialogContent>
+              Bạn có chắc chắn muốn xoá tài khoản
+              <strong> {selectedUser?.name_customer}</strong>(
+              {selectedUser?.phone}) không?
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={() => setOpenDeleteDialog(false)}>Hủy</Button>
+              <Button
+                color="error"
+                variant="contained"
+                onClick={handleConfirmDelete}
+              >
+                Xoá
+              </Button>
+            </DialogActions>
+          </Dialog>
+
+          <Snackbar
+            open={snackbar.open}
+            autoHideDuration={3000}
+            onClose={() => setSnackbar({ ...snackbar, open: false })}
+            anchorOrigin={{ vertical: "top", horizontal: "center" }}
+          >
+            <Alert
+              onClose={() => setSnackbar({ ...snackbar, open: false })}
+              severity={snackbar.severity}
+              sx={{ width: "100%" }}
+            >
+              {snackbar.message}
+            </Alert>
+          </Snackbar>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default AdminDashboard;

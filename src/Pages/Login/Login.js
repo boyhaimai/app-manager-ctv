@@ -6,11 +6,20 @@ import Box from "@mui/material/Box";
 import IconButton from "@mui/material/IconButton";
 import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
-import { Alert, Snackbar } from "@mui/material";
+import {
+  Alert,
+  Button,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Snackbar,
+} from "@mui/material";
 
 import styles from "./Login.module.scss";
 import classNames from "classnames/bind";
 import vazoai from "~/Components/assets/image/vazoAI (1).png";
+import { Lock, WarningAmber } from "@mui/icons-material";
 
 const cx = classNames.bind(styles);
 
@@ -56,6 +65,15 @@ function Login() {
     message: "",
     severity: "success",
   });
+  const [dialog, setDialog] = useState({
+    open: false,
+    title: "",
+    message: "",
+  });
+
+  const handleCloseDialog = () => {
+    setDialog({ ...dialog, open: false });
+  };
 
   const handleChange = (event, newValue) => {
     setValue(newValue);
@@ -109,16 +127,54 @@ function Login() {
       const result = Array.isArray(data) ? data[0] : data;
 
       if (result.success === true || result.success === "true") {
+        // 1️⃣ Ưu tiên kiểm tra is_ban
+        if (result.is_ban === true || result.is_ban === "true") {
+          setDialog({
+            open: true,
+            title: "Tài khoản của bạn đã bị khóa",
+            message:
+              "Tài khoản của bạn đã bị khóa. Vui lòng liên hệ quản trị viên.",
+            icon: <Lock color="error" sx={{ mr: 1 }} />,
+          });
+          return;
+        }
+
+        // 2️⃣ Kiểm tra expire_at (trừ khi expire_at = "0")
+        if (result.expire_at !== "0" && result.expire_at) {
+          if (new Date(result.expire_at) < new Date()) {
+            setDialog({
+              open: true,
+              title: "Tài khoản của bạn đã hết hạn",
+              message:
+                "Tài khoản của bạn đã hết hạn. Vui lòng liên hệ trợ lý AI với số điện thoại Zalo: 0359686776 để gia hạn.",
+              icon: <WarningAmber color="warning" sx={{ mr: 1 }} />,
+            });
+            return;
+          }
+        }
+
+        // 3️⃣ Nếu hợp lệ thì cho login
         setSnackbar({
           open: true,
           message: result.message || "Đăng nhập thành công",
           severity: "success",
         });
+
         if (result.token) {
           localStorage.setItem("token", result.token);
         }
         localStorage.setItem("phone", phone);
-        setTimeout(() => navigate("/manager-page"), 1500);
+        localStorage.setItem("role", result.role);
+
+        setTimeout(() => {
+          if (parseInt(result.role) === 0) {
+            navigate("/admin");
+          } else if (parseInt(result.role) === 1) {
+            navigate("/manager-page");
+          } else {
+            navigate("/");
+          }
+        }, 1500);
       } else {
         // ❌ Trường hợp sai mật khẩu hoặc thất bại
         setSnackbar({
@@ -434,6 +490,44 @@ function Login() {
           {snackbar.message}
         </Alert>
       </Snackbar>
+
+      <Dialog
+        open={dialog.open}
+        onClose={handleCloseDialog}
+        aria-labelledby="alert-dialog-title"
+        aria-describedby="alert-dialog-description"
+      >
+        <DialogTitle
+          id="alert-dialog-title"
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: 1,
+            fontWeight: 600,
+            color: "red",
+          }}
+        >
+          {dialog.icon}
+          {dialog.title}
+        </DialogTitle>
+        <DialogContent>
+          <p style={{fontSize: 24}}>{dialog.message}</p>
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={handleCloseDialog}
+            variant="contained"
+            sx={{
+              textTransform: "none",
+              color: "white",
+              background: "var(--b_liner)",
+              cursor: "pointer",
+            }}
+          >
+            Đóng
+          </Button>
+        </DialogActions>
+      </Dialog>
     </div>
   );
 }

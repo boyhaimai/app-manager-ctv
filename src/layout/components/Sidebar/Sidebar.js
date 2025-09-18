@@ -26,6 +26,7 @@ function Sidebar() {
   const [adminInfo, setAdminInfo] = useState(null);
   const open = Boolean(anchorEl);
   const navigate = useNavigate();
+  const role = parseInt(localStorage.getItem("role"), 10);
 
   useEffect(() => {
     const fetchAdminInfo = async () => {
@@ -81,27 +82,40 @@ function Sidebar() {
     <>
       <aside className={cx("wrapper")}>
         <h4 className={cx("title")}>Administration</h4>
-        <MenuCustom>
-          <MenuItemCustom
-            title="Tổng quan"
-            to={config.routes.manager_page}
-            icon={<Dashboard className={cx("icon_menu")} />}
-          />
+        {role === 1 && (
+          <MenuCustom>
+            <MenuItemCustom
+              title="Tổng quan"
+              to={config.routes.manager_page}
+              icon={<Dashboard className={cx("icon_menu")} />}
+            />
 
-          <Box className={cx("support")}>
+            <Box className={cx("support")}>
+              <MenuItemCustom
+                title="Cài đặt"
+                to="/profile"
+                icon={<SettingsRounded className={cx("icon_menu")} />}
+              />
+              <MenuItemCustom
+                title="About us"
+                to="https://vaway.vn/"
+                target="_blank"
+                icon={<ErrorRounded className={cx("icon_menu")} />}
+              />
+            </Box>
+          </MenuCustom>
+        )}
+
+        {/* Nếu role = 0 => menu admin */}
+        {role === 0 && (
+          <MenuCustom>
             <MenuItemCustom
-              title="Cài đặt"
-              to="/profile"
-              icon={<SettingsRounded className={cx("icon_menu")} />}
+              title="Dashboard Admin"
+              to={config.routes.admin}
+              icon={<Dashboard className={cx("icon_menu")} />}
             />
-            <MenuItemCustom
-              title="About us"
-              to="https://vaway.vn/"
-              target="_blank"
-              icon={<ErrorRounded className={cx("icon_menu")} />}
-            />
-          </Box>
-        </MenuCustom>
+          </MenuCustom>
+        )}
         <Box
           sx={{
             display: "flex",

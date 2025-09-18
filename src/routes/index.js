@@ -1,5 +1,6 @@
 import config from "~/config";
 import AddConfigPage from "~/Pages/AddConfig/AddConfigPage";
+import Admin from "~/Pages/Admin/Admin";
 import ChatManager from "~/Pages/ChatManager/ChatManager";
 import Login from "~/Pages/Login/Login";
 import ManagePage from "~/Pages/ManagePage/ManagePage";
@@ -12,6 +13,7 @@ const publicRoutes = [
   { path: config.routes.add_config, component: AddConfigPage, layout: null },
   { path: config.routes.profile, component: Profile },
   { path: config.routes.manager_page, component: ManagePage },
+  { path: config.routes.admin, component: Admin },
 ];
 
 // truy cập riêng tư nếu không phải public thì chuyển hướng sang trang login

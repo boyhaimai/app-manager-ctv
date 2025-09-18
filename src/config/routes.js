@@ -5,6 +5,7 @@ const routes = {
   add_config: "/add-config",
   profile: "/profile",
   manager_page: "/manager-page",
+  admin: "/admin",
 };
 
 export default routes;
