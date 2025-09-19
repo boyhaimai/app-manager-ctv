@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Tabs from "@mui/material/Tabs";
 import Tab from "@mui/material/Tab";
@@ -13,6 +13,7 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
+  Input,
   Snackbar,
 } from "@mui/material";
 
@@ -25,6 +26,8 @@ const cx = classNames.bind(styles);
 
 const urlRegister = "https://wf.mkt04.vawayai.com/webhook/register_msg";
 const urlLogin = "https://wf.mkt04.vawayai.com/webhook/login_msg";
+const urlCheckExistToken =
+  "https://wf.mkt04.vawayai.com/webhook-test/check_exist_toekn";
 
 function TabPanel(props) {
   const { children, value, index, ...other } = props;
@@ -59,6 +62,7 @@ function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [loginError, setLoginError] = useState("");
   const [registerError, setRegisterError] = useState("");
+  const [rememberMe, setRememberMe] = useState(false);
   const navigate = useNavigate();
   const [snackbar, setSnackbar] = useState({
     open: false,
@@ -70,6 +74,53 @@ function Login() {
     title: "",
     message: "",
   });
+
+  // useEffect(() => {
+  //   const token = localStorage.getItem("token");
+  //   const role = localStorage.getItem("role");
+
+  //   if (token) {
+  //     // Nếu muốn check token với server thì gọi API ở đây
+  //     fetch(urlCheckExistToken, {
+  //       method: "POST",
+  //       headers: {
+  //         "Content-Type": "application/json",
+  //         Authorization: `Bearer ${token}`,
+  //       },
+  //     })
+  //       .then((res) => res.json())
+  //       .then((data) => {
+  //         if (data.success) {
+  //           if (parseInt(role) === 0) {
+  //             navigate("/admin");
+  //           } else if (parseInt(role) === 1) {
+  //             navigate("/manager-page");
+  //           } else {
+  //             navigate("/");
+  //           }
+  //         } else {
+  //           localStorage.clear(); // token sai thì xóa
+  //         }
+  //       })
+  //       .catch(() => {
+  //         localStorage.clear();
+  //       });
+  //   }
+  // }, [navigate]);
+
+  useEffect(() => {
+    const savedPhone = localStorage.getItem("savedPhone");
+    const savedPass = localStorage.getItem("savedPass");
+    if (savedPhone && savedPass) {
+      setPhone(savedPhone);
+      try {
+        setPassword(atob(savedPass)); // giải mã base64
+        setRememberMe(true);
+      } catch (e) {
+        console.error("Giải mã mật khẩu thất bại:", e);
+      }
+    }
+  }, []);
 
   const handleCloseDialog = () => {
     setDialog({ ...dialog, open: false });
@@ -127,6 +178,14 @@ function Login() {
       const result = Array.isArray(data) ? data[0] : data;
 
       if (result.success === true || result.success === "true") {
+        // ...
+        if (rememberMe) {
+          localStorage.setItem("savedPhone", phone);
+          localStorage.setItem("savedPass", btoa(password)); // mã hóa base64
+        } else {
+          localStorage.removeItem("savedPhone");
+          localStorage.removeItem("savedPass");
+        }
         // 1️⃣ Ưu tiên kiểm tra is_ban
         if (result.is_ban === true || result.is_ban === "true") {
           setDialog({
@@ -346,6 +405,25 @@ function Login() {
 
             {loginError && <p className={styles.error}>{loginError}</p>}
 
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                marginTop: "8px",
+                marginLeft: "10px",
+              }}
+            >
+              <input
+                type="checkbox"
+                id="rememberMe"
+                checked={rememberMe}
+                onChange={(e) => setRememberMe(e.target.checked)}
+              />
+              <label htmlFor="rememberMe" style={{ marginLeft: "6px", fontSize: "18px" }}>  
+                Nhớ mật khẩu
+              </label>
+            </div>
+
             <button
               type="submit"
               className={styles.loginButton}
@@ -511,7 +589,7 @@ function Login() {
           {dialog.title}
         </DialogTitle>
         <DialogContent>
-          <p style={{fontSize: 24}}>{dialog.message}</p>
+          <p style={{ fontSize: 24 }}>{dialog.message}</p>
         </DialogContent>
         <DialogActions>
           <Button

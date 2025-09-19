@@ -502,7 +502,7 @@ function ManagePage() {
         ) : (
           // Desktop: giữ layout hiện tại (select + 2 nút ngang)
           <Box display="flex" gap={2} alignItems="center">
-            <FormControl variant="outlined" size="small" sx={{ minWidth: 200 }}>
+            <FormControl variant="outlined" size="small" sx={{ minWidth: 180 }}>
               <InputLabel
                 sx={{
                   fontSize: "14px",
@@ -519,7 +519,18 @@ function ManagePage() {
                 }}
                 renderValue={(selectedId) => {
                   const chosen = configs.find((c) => c.id === selectedId);
-                  return chosen ? chosen.name_project : "";
+                  return (
+                    <Box
+                      sx={{
+                        maxWidth: 170, // 👈 cố định chiều rộng
+                        overflow: "hidden",
+                        whiteSpace: "nowrap",
+                        textOverflow: "ellipsis",
+                      }}
+                    >
+                      {chosen ? chosen.name_project : ""}
+                    </Box>
+                  );
                 }}
                 sx={{
                   fontSize: "14px",
@@ -553,7 +564,17 @@ function ManagePage() {
                       alignItems: "center",
                     }}
                   >
-                    <span>{cfg.name_project}</span>
+                    <Box
+                      component={"span"}
+                      sx={{
+                        maxWidth: 170, // 👈 giới hạn chiều rộng
+                        overflow: "hidden",
+                        whiteSpace: "nowrap",
+                        textOverflow: "ellipsis",
+                      }}
+                    >
+                      {cfg.name_project}
+                    </Box>
                     <Close
                       sx={{ fontSize: 18, color: "red", cursor: "pointer" }}
                       onClick={(e) => {
@@ -591,10 +612,12 @@ function ManagePage() {
               size="small"
               startIcon={<Save />}
               onClick={handleSave}
+              mr={1}
               sx={{
                 backgroundColor: "rgba(255, 255, 255, 0.2)",
                 color: "white",
                 textTransform: "none",
+                marginRight: "10px ",
                 "&:hover": {
                   backgroundColor: "rgba(255, 255, 255, 0.3)",
                 },
@@ -1064,7 +1087,7 @@ function ManagePage() {
                     },
                   }}
                 >
-                  <TableRow >
+                  <TableRow>
                     <TableCell>STT</TableCell>
                     <TableCell>Ảnh đại diện</TableCell>
                     <TableCell>Tên CTV</TableCell>
@@ -1251,7 +1274,7 @@ function ManagePage() {
 
         <DialogActions>
           <Button
-          variant="contained"
+            variant="contained"
             onClick={() => setOpenDialog(false)}
             sx={{ textTransform: "none", background: "var(--b_liner)" }}
           >
