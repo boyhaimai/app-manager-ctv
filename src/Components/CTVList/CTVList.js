@@ -12,7 +12,7 @@ const urlGetConfigWithId =
 function CTVList({ onSelect }) {
   const [ctvData, setCtvData] = useState([]);
   const { configId, ctvId } = useParams();
-  const { setConfig } = useConfig(); // 👈 lấy setConfig từ context
+  const { setConfig } = useConfig();
 
   useEffect(() => {
     if (!configId) return;
@@ -30,35 +30,35 @@ function CTVList({ onSelect }) {
       .then((data) => {
         const result = Array.isArray(data) ? data[0] : data;
         if (result) {
-          // 👇 cập nhật config vào context
           setConfig(result);
-
-          // gọi get_ctv
-          return fetch(result.get_ctv, {
-            // return fetch(
-            //   "https://wf.mkt04.vawayai.com/webhook-test/get-list-ctv",
-            //   {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: "Basic " + btoa("boyhaimais:bangdz202"),
-            },
-            body: JSON.stringify({ action: "get_ctv_list" }),
-          });
+          // load toàn bộ CTV 1 lần
+          loadCTVs(result.get_ctv);
         }
       })
-      .then((res) => res?.json())
-      .then((data) => {
-        // data = [ { result: { ctvData, stats, unreplied, top_ctv, monthly_stats } } ]
-        const result = Array.isArray(data) ? data[0]?.result : data?.result;
+      .catch((err) => console.error("Lỗi:", err));
+  }, [configId, setConfig]);
 
+  const loadCTVs = (url) => {
+    fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: "Basic " + btoa("boyhaimais:bangdz202"),
+      },
+      body: JSON.stringify({
+        action: "get_ctv_list",
+        // limit/offset bỏ đi để backend trả full list
+      }),
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        const result = Array.isArray(data) ? data[0]?.result : data?.result;
         if (result?.ctvData) {
           setCtvData(result.ctvData);
         }
       })
-
       .catch((err) => console.error("Lỗi:", err));
-  }, [configId, setConfig]);
+  };
 
   return (
     <div className={cx("wrapper")}>
@@ -86,7 +86,7 @@ function CTVList({ onSelect }) {
             </Link>
           </li>
         ))}
-      </ul>
+      </ul>    
     </div>
   );
 }

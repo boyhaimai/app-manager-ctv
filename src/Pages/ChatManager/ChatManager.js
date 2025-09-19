@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import classNames from "classnames/bind";
 import "@fortawesome/fontawesome-free/css/all.min.css";
@@ -15,40 +15,113 @@ function ChatManager() {
   const { config } = useConfig();
   const { ctvId } = useParams();
   const navigate = useNavigate();
+
   const [customerList, setCustomerList] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [newMessage, setNewMessage] = useState({});
   const [messages, setMessages] = useState({});
   const [mobileView, setMobileView] = useState("ctv");
+  const [page, setPage] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
+  const loaderRef = useRef(null);
+  // eslint-disable-next-line no-unused-vars
+  const [msgPage, setMsgPage] = useState({}); // lưu page cho từng hội thoại
+  const [msgHasMore, setMsgHasMore] = useState({});
+  const [msgLoading, setMsgLoading] = useState(false);
+  const [openChats, setOpenChats] = useState([]);
+  const [activeChat, setActiveChat] = useState(null);
 
+  const limit = 20;
+
+  const loadConversations = async (ctvId, pageNum) => {
+    if (!config?.get_chat || isLoading) return;
+
+    setIsLoading(true);
+    try {
+      const res = await fetch(config.get_chat, {
+        // const res = await fetch(
+        //   "https://wf.mkt04.vawayai.com/webhook/get-chats-ctv",
+        //   {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Basic " + btoa("boyhaimais:bangdz202"),
+        },
+        body: JSON.stringify({
+          ctvId,
+          limit,
+          offset: pageNum * limit,
+        }),
+      });
+
+      if (!res.ok) {
+        console.error("API lỗi:", res.status, res.statusText);
+        setHasMore(false);
+        setIsLoading(false);
+
+        if (loaderRef.current) {
+          const scrollContainer = document.querySelector(
+            `.${cx("conversation-list")}`
+          );
+          const observer = new IntersectionObserver(() => {});
+          observer.disconnect(); // ❌ stop luôn
+        }
+
+        return;
+      }
+
+      const data = await res.json();
+      const newList = data[0]?.listCtv || [];
+      if (newList.length < limit) setHasMore(false);
+      setCustomerList((prev) => [...prev, ...newList]);
+    } catch (err) {
+      console.error("Lỗi lấy danh sách khách:", err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Reset và load lần đầu khi đổi CTV
   useEffect(() => {
-    if (!ctvId || !config?.get_chat) return;
-
-    // reset
-    setOpenChats([]);
-    setActiveChat(null);
-    setMessages({});
-    setNewMessage({});
-    localStorage.removeItem("openChats");
-    localStorage.removeItem("activeChat");
-
-    fetch(config.get_chat, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: "Basic " + btoa("boyhaimais:bangdz202"),
-      },
-      body: JSON.stringify({ ctvId }),
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        setCustomerList(data[0]?.listCtv || []);
-      })
-      .catch((err) => console.error("Lỗi lấy danh sách khách:", err));
+    if (!ctvId) return;
+    setCustomerList([]);
+    setPage(0);
+    setHasMore(true);
+    loadConversations(ctvId, 0);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ctvId, config]);
 
-  // Lấy tin nhắn
-  const getMessages = async (ctvId, uidFrom) => {
+  // Observer load thêm khi scroll xuống cuối
+  useEffect(() => {
+    if (!loaderRef.current) return;
+
+    const scrollContainer = document.querySelector(
+      `.${cx("conversation-list")}`
+    );
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (!hasMore || isLoading) return; // ✅ guard chặn lặp
+        if (entries[0].isIntersecting) {
+          setPage((prev) => prev + 1);
+        }
+      },
+      { root: scrollContainer, rootMargin: "0px 0px 50px 0px", threshold: 0.1 }
+    );
+
+    observer.observe(loaderRef.current);
+    return () => observer.disconnect();
+  }, [hasMore, isLoading, ctvId, config]);
+
+  useEffect(() => {
+    if (ctvId) {
+      loadConversations(ctvId, page);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page, ctvId]);
+
+  const getMessages = async (ctvId, uidFrom, page = 0, limit = 20) => {
     if (!config?.get_message) return [];
     try {
       const res = await fetch(config.get_message, {
@@ -57,8 +130,17 @@ function ChatManager() {
           "Content-Type": "application/json",
           Authorization: "Basic " + btoa("boyhaimais:bangdz202"),
         },
-        body: JSON.stringify({ ctvId, uidFrom }),
+        body: JSON.stringify({
+          ctvId,
+          uidFrom,
+          limit,
+          offset: page * limit,
+        }),
       });
+      if (!res.ok) {
+        console.error("API lỗi:", res.status);
+        return [];
+      }
       const data = await res.json();
       return data[0]?.messageChats || [];
     } catch (err) {
@@ -67,69 +149,96 @@ function ChatManager() {
     }
   };
 
-  // Khôi phục trạng thái từ localStorage
-  const getInitialOpenChats = () => {
+  const loadMessages = async (ctvId, uidFrom, page = 0, limit = 20) => {
+    if (!config?.get_message || msgLoading) return [];
+    setMsgLoading(true);
     try {
-      const saved = localStorage.getItem("openChats");
-      if (saved) {
-        return JSON.parse(saved); // ✅ Lấy danh sách đã lưu
+      const res = await fetch(config.get_message, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Basic " + btoa("boyhaimais:bangdz202"),
+        },
+        body: JSON.stringify({ ctvId, uidFrom, limit, offset: page * limit }),
+      });
+      if (!res.ok) {
+        console.error("API lỗi:", res.status);
+        setMsgHasMore((prev) => ({ ...prev, [uidFrom]: false }));
+        return [];
       }
-    } catch (error) {
-      console.error("Error loading saved chats:", error);
+      const data = await res.json();
+      const list = data[0]?.messageChats || [];
+      if (list.length < limit) {
+        setMsgHasMore((prev) => ({ ...prev, [uidFrom]: false }));
+      }
+      return list;
+    } catch (err) {
+      console.error("Lỗi load tin nhắn:", err);
+      return [];
+    } finally {
+      setMsgLoading(false);
     }
-    return [];
   };
 
-  const getInitialActiveChat = () => {
-    try {
-      const saved = localStorage.getItem("activeChat");
-      if (saved) {
-        const activeChatId = JSON.parse(saved);
-        // Kiểm tra xem activeChat có tồn tại trong openChats không
-        const openChats = getInitialOpenChats();
-        if (openChats.find((chat) => chat.id === activeChatId)) {
-          return activeChatId;
+  const loaderBottomRef = useRef(null);
+
+  useEffect(() => {
+    if (!loaderBottomRef.current || !activeChat) return;
+
+    const scrollContainer = document.querySelector(
+      `.chat-window[data-chat-id="${activeChat}"] .chat-messages`
+    );
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (
+          entries[0].isIntersecting &&
+          msgHasMore[activeChat] &&
+          !msgLoading
+        ) {
+          setMsgPage((prev) => ({
+            ...prev,
+            [activeChat]: (prev[activeChat] || 0) + 1,
+          }));
         }
-      }
-    } catch (error) {
-      console.error("Error loading active chat:", error);
-    }
-    return null;
-  };
+      },
+      { root: scrollContainer, rootMargin: "0px 0px 50px 0px", threshold: 0.1 }
+    );
 
-  const [openChats, setOpenChats] = useState(getInitialOpenChats());
-  const [activeChat, setActiveChat] = useState(getInitialActiveChat());
-
-  // Lưu trạng thái vào localStorage khi có thay đổi
-  useEffect(() => {
-    try {
-      localStorage.setItem("openChats", JSON.stringify(openChats));
-    } catch (error) {
-      console.error("Error saving open chats:", error);
-    }
-  }, [openChats]);
-
-  useEffect(() => {
-    try {
-      localStorage.setItem("activeChat", JSON.stringify(activeChat));
-    } catch (error) {
-      console.error("Error saving active chat:", error);
-    }
-  }, [activeChat]);
+    observer.observe(loaderBottomRef.current);
+    return () => observer.disconnect();
+  }, [activeChat, msgHasMore, msgLoading]);
 
   // Lọc danh sách hội thoại theo từ khóa tìm kiếm
-  const filteredConversations = customerList.filter((conv) =>
-    conv.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  console.log(filteredConversations, "filteredConversations");
+  const filteredConversations = customerList
+    .filter((conv) => conv && conv.id && conv.name) // ✅ bỏ qua conv null hoặc thiếu id/name
+    .filter((conv) =>
+      conv.name.toLowerCase().includes(searchTerm.toLowerCase())
+    );
 
   // Mở hội thoại chat
   const openChat = async (conversation) => {
     if (!openChats.find((chat) => chat.id === conversation.id)) {
-      setOpenChats([...openChats, conversation]);
+      setOpenChats((prev) => [...prev, conversation]);
+
+      // 👇 Sau khi render xong, scroll tới popup mới
+      setTimeout(() => {
+        const chatWindow = document.querySelector(
+          `.chat-window[data-chat-id="${conversation.id}"]`
+        );
+        if (chatWindow) {
+          chatWindow.scrollIntoView({
+            behavior: "smooth",
+            block: "nearest",
+            inline: "center",
+          });
+        }
+      }, 200);
     }
+
     setActiveChat(conversation.id);
+    setMsgPage((prev) => ({ ...prev, [conversation.id]: 0 }));
+    setMsgHasMore((prev) => ({ ...prev, [conversation.id]: true }));
 
     const msgs = await getMessages(conversation.id_nick_zalo, conversation.id);
 
@@ -138,16 +247,15 @@ function ChatManager() {
       text: m.content,
       sender: m.is_selt === "true" ? "me" : "other",
       time: new Date(Number(m.time)).toLocaleString("vi-VN"),
-      avatar: m.avatar || "/default-avatar.png", // ✅ dùng avatar từ API
+      avatar: m.avatar || "/default-avatar.png",
       isSystemMessage: false,
     }));
 
     setMessages((prev) => ({
       ...prev,
-      [conversation.id]: mapped,
+      [conversation.id]: mapped.reverse(),
     }));
 
-    // Tự động cuộn xuống tin nhắn mới nhất sau khi load tin nhắn
     setTimeout(() => {
       const chatMessagesElement = document.querySelector(
         `.chat-window[data-chat-id="${conversation.id}"] .chat-messages`
@@ -325,6 +433,23 @@ function ChatManager() {
                         </div>
                       ))}
                     </div>
+                    {/* loader */}
+                    {hasMore ? (
+                      <div
+                        ref={loaderRef}
+                        style={{
+                          textAlign: "center",
+                          padding: 10,
+                          fontSize: "18px",
+                        }}
+                      >
+                        Đang tải thêm...
+                      </div>
+                    ) : (
+                      <p style={{ textAlign: "center", fontSize: "18px" }}>
+                        Hết danh sách
+                      </p>
+                    )}
                   </div>
                 )}
               </div>
@@ -608,6 +733,28 @@ function ChatManager() {
                           </div>
                         </div>
                       ))}
+                      {hasMore ? (
+                        <div
+                          ref={loaderRef}
+                          style={{
+                            textAlign: "center",
+                            padding: 10,
+                            fontSize: 18,
+                          }}
+                        >
+                          Đang tải thêm...
+                        </div>
+                      ) : (
+                        <p
+                          style={{
+                            textAlign: "center",
+                            fontSize: "18px",
+                            marginBottom: "5px",
+                          }}
+                        >
+                          Hết danh sách
+                        </p>
+                      )}
                     </div>
                   </div>
                 )}

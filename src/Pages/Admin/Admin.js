@@ -90,48 +90,79 @@ const AdminDashboard = () => {
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
   const [pendingRole, setPendingRole] = useState(null);
   const [page, setPage] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
+  const [openRoleDialog, setOpenRoleDialog] = useState(false);
+  const [roleRequest, setRoleRequest] = useState(null);
+
   const rowsPerPage = 10;
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const token = localStorage.getItem("token");
-        if (!token) return;
+  const fetchUsers = async (pageNum = 0) => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token || isLoading) return;
 
-        const res = await fetch(urlGetInfoAdmin, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
+      setIsLoading(true);
+
+      const res = await fetch(urlGetInfoAdmin, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          limit: rowsPerPage,
+          offset: pageNum * rowsPerPage,
+        }),
+      });
+
+      const text = await res.text();
+      let data;
+      try {
+        data = JSON.parse(text);
+      } catch {
+        console.error("Không parse được:", text);
+        return;
+      }
+
+      const result = Array.isArray(data) ? data[0]?.result : data?.result;
+      if (result) {
+        if (pageNum === 0) {
+          setUsers(result.accounts || []);
+        } else {
+          setUsers((prev) => [...prev, ...(result.accounts || [])]);
+        }
+        setStats({
+          total_accounts: result.total_accounts,
+          total_admin: result.total_admin,
+          total_manager: result.total_manager,
+          total_banned: result.total_banned,
         });
 
-        const text = await res.text();
-        let data;
-        try {
-          data = JSON.parse(text);
-        } catch {
-          console.error("Không parse được:", text);
-          return;
+        if ((result.accounts || []).length < rowsPerPage) {
+          setHasMore(false);
         }
-
-        const result = Array.isArray(data) ? data[0]?.result : data?.result;
-        if (result) {
-          setStats({
-            total_accounts: result.total_accounts,
-            total_admin: result.total_admin,
-            total_manager: result.total_manager,
-            total_banned: result.total_banned,
-          });
-          setUsers(result.accounts || []);
-        }
-      } catch (err) {
-        console.error("Lỗi fetch admin:", err);
       }
-    };
+    } catch (err) {
+      console.error("Lỗi fetch admin:", err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-    fetchData();
+  // lần đầu mount
+  useEffect(() => {
+    fetchUsers(0);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // khi đổi page
+  useEffect(() => {
+    if (page > 0) {
+      fetchUsers(page);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page]);
 
   useEffect(() => {
     const resizeHeader = () => {
@@ -570,13 +601,15 @@ const AdminDashboard = () => {
                 </Box>
               </Box>
               <CardContent sx={{ flex: 1, overflowY: "auto", padding: 0 }}>
-                <Table >
+                <Table>
                   <TableHead
-                    // sx={{
-                    //   background: "var(--c_header_table)",                     
-                    // }}
+                  // sx={{
+                  //   background: "var(--c_header_table)",
+                  // }}
                   >
-                    <TableRow sx={{ background: "var(--c_header_table) !important" }}>
+                    <TableRow
+                      sx={{ background: "var(--c_header_table) !important" }}
+                    >
                       <TableCell className={cx("title_table")}>
                         Trạng thái
                       </TableCell>
@@ -821,7 +854,6 @@ const AdminDashboard = () => {
                       size="small"
                       disabled={page === 0}
                       onClick={() => setPage((prev) => prev - 1)}
-                      sx={{ textTransform: "none" }}
                     >
                       Prev
                     </Button>
@@ -846,12 +878,8 @@ const AdminDashboard = () => {
 
                     <Button
                       size="small"
-                      disabled={
-                        page >=
-                        Math.ceil(filteredUsers.length / rowsPerPage) - 1
-                      }
+                      disabled={!hasMore}
                       onClick={() => setPage((prev) => prev + 1)}
-                      sx={{ textTransform: "none" }}
                     >
                       Next
                     </Button>
@@ -865,32 +893,28 @@ const AdminDashboard = () => {
                   onClose={handleMenuClose}
                 >
                   <MenuItem
-                    onClick={() =>
-                      setPendingRole({
+                    onClick={() => {
+                      setRoleRequest({
                         userId: selectedUser?.id,
                         role: "admin",
-                      })
-                    }
+                      });
+                      setOpenRoleDialog(true);
+                    }}
                   >
                     <Shield size={16} style={{ marginRight: "8px" }} /> Admin
                   </MenuItem>
                   <MenuItem
-                    onClick={() =>
-                      setPendingRole({
+                    onClick={() => {
+                      setRoleRequest({
                         userId: selectedUser?.id,
                         role: "manager",
-                      })
-                    }
+                      });
+                      setOpenRoleDialog(true);
+                    }}
                   >
                     <UserCheck size={16} style={{ marginRight: "8px" }} /> Quản
                     lý
                   </MenuItem>
-
-                  {/* <MenuItem
-                    onClick={() => updateUserRole(selectedUser?.id, "viewer")}
-                  >
-                    <Eye size={16} style={{ marginRight: "8px" }} /> Người xem
-                  </MenuItem> */}
                 </Menu>
               </CardContent>
             </Card>
@@ -913,6 +937,40 @@ const AdminDashboard = () => {
                 onClick={handleConfirmDelete}
               >
                 Xoá
+              </Button>
+            </DialogActions>
+          </Dialog>
+
+          <Dialog
+            open={openRoleDialog}
+            onClose={() => setOpenRoleDialog(false)}
+          >
+            <DialogContent sx={{fontSize: 25}}>
+              Bạn có chắc chắn muốn gán quyền
+              <strong>
+                {" "}
+                {roleRequest?.role === "admin" ? "Admin" : "Quản lý"}{" "}
+              </strong>
+              cho tài khoản <strong>{selectedUser?.name_customer}</strong> (
+              {selectedUser?.phone}) không?
+            </DialogContent>
+            <DialogActions>
+              <Button
+                onClick={() => setOpenRoleDialog(false)}
+                sx={{ textTransform: "none" }}
+              >
+                Hủy
+              </Button>
+              <Button
+                color="primary"
+                variant="contained"
+                onClick={() => {
+                  setPendingRole(roleRequest); // ✅ chỉ set khi confirm
+                  setOpenRoleDialog(false);
+                }}
+                sx={{ textTransform: "none" }}
+              >
+                Xác nhận
               </Button>
             </DialogActions>
           </Dialog>

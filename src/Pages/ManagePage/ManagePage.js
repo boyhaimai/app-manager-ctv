@@ -333,8 +333,8 @@ function ManagePage() {
 
   const handlePushId = () => {
     if (!selectedConfig) return;
-    navigate(`/chat/${selectedConfig.id}`);
-    console.log("đi tới trang chat với id:", selectedConfig.id);
+    navigate(`/chat-manager/${selectedConfig.id}`);
+    console.log("đi tới trang chat-manager với id:", selectedConfig.id);
   };
 
   const chartData = monthlyStats.map((item) => ({
