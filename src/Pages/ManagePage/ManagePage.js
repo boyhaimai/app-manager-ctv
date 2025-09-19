@@ -21,6 +21,12 @@ import {
   useTheme,
   IconButton,
   Menu,
+  Table,
+  TableHead,
+  TableRow,
+  TableCell,
+  TableBody,
+  Avatar,
 } from "@mui/material";
 import {
   Chat,
@@ -63,10 +69,8 @@ function ManagePage() {
     total_replied: 0,
   });
   const navigate = useNavigate();
-  const [fetchLoading, setFetchLoading] = useState(false);
-  const [loadingWebsite, setLoadingWebsite] = useState(false);
-  const [error, setError] = useState("");
-  const [saveSuccess, setSaveSuccess] = useState(false);
+  const [fetchLoading] = useState(false);
+  const [error] = useState("");
   const wrapperRef = useRef();
   const headerRef = useRef();
   const [configs, setConfigs] = useState([]);
@@ -91,6 +95,14 @@ function ManagePage() {
 
   const [anchorEl, setAnchorEl] = useState(null);
   const openMenu = Boolean(anchorEl);
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(20);
+
+  const paginatedData = dialogData.slice(
+    page * rowsPerPage,
+    page * rowsPerPage + rowsPerPage
+  );
+
   const handleMenuOpen = (event) => setAnchorEl(event.currentTarget);
   const handleMenuClose = () => setAnchorEl(null);
 
@@ -342,6 +354,20 @@ function ManagePage() {
       setDialogData(todayChats);
     }
     setOpenDialog(true);
+  };
+
+  const formatTime = (ts) => {
+    if (!ts) return "--";
+    const date = new Date(Number(ts));
+    if (isNaN(date.getTime())) return "--";
+    return date.toLocaleString("vi-VN", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+    });
   };
 
   return (
@@ -1010,50 +1036,227 @@ function ManagePage() {
         open={openDialog}
         onClose={() => setOpenDialog(false)}
         fullWidth
-        maxWidth="md"
+        maxWidth="xl"
       >
         <DialogTitle>{dialogTitle}</DialogTitle>
-        <DialogContent dividers>
-          {dialogTitle === "Danh sách Cộng tác viên" &&
-            dialogData.map((ctv) => (
-              <div
-                key={ctv.id}
-                style={{ padding: "8px 0", borderBottom: "1px solid #eee" }}
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: "column",
+            height: "77vh", // chiếm 80% màn hình
+          }}
+        >
+          <DialogContent dividers>
+            {dialogTitle === "Danh sách Cộng tác viên" && (
+              <Table
+                sx={{
+                  borderRadius: 2,
+                  overflow: "hidden",
+                  boxShadow: "0px 2px 8px rgba(0,0,0,0.05)",
+                }}
               >
-                <strong>{ctv.name}</strong>
-              </div>
-            ))}
+                <TableHead
+                  sx={{
+                    background: "var(--c_header_table)",
+                    "& .MuiTableCell-head": {
+                      fontWeight: 600, // chữ đậm
+                      color: "#374151", // màu chữ tối
+                    },
+                  }}
+                >
+                  <TableRow >
+                    <TableCell>STT</TableCell>
+                    <TableCell>Ảnh đại diện</TableCell>
+                    <TableCell>Tên CTV</TableCell>
+                    {/* <TableCell>Nội dung gần nhất</TableCell>
+                    <TableCell>Thời gian</TableCell> */}
+                  </TableRow>
+                </TableHead>
+                <TableBody
+                  sx={{
+                    "& .MuiTableCell-root": {
+                      color: "#4b5563", // màu chữ body
+                      borderBottom: "1px solid #e5e7eb", // đường kẻ mảnh
+                    },
+                    "& .MuiTableRow-root:hover": {
+                      backgroundColor: "#f3f4f6", // hover nhạt
+                    },
+                  }}
+                >
+                  {paginatedData.map((ctv, idx) => (
+                    <TableRow key={idx}>
+                      <TableCell>{idx + 1}</TableCell>
+                      <TableCell>
+                        <Avatar src={ctv.avatar} alt={ctv.name} />
+                      </TableCell>
+                      <TableCell>{ctv.name}</TableCell>
+                      {/* <TableCell>{ctv.recentChat || "--"}</TableCell>
+                      <TableCell>{formatTime(ctv.time)}</TableCell> */}
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
 
-          {dialogTitle === "Danh sách hội thoại chưa rep" &&
-            dialogData.map((chat) => (
-              <div
-                key={chat.thread_id}
-                style={{ padding: "8px 0", borderBottom: "1px solid #eee" }}
+            {dialogTitle === "Danh sách hội thoại chưa rep" && (
+              <Table
+                sx={{
+                  borderRadius: 2,
+                  overflow: "hidden",
+                  boxShadow: "0px 2px 8px rgba(0,0,0,0.05)",
+                }}
               >
-                <strong>{chat.ctv_name}</strong> với khách{" "}
-                <em>{chat.customer_name}</em> <br />
-                <small>
-                  Thời gian: {new Date(Number(chat.time)).toLocaleString()}
-                </small>
-              </div>
-            ))}
+                <TableHead
+                  sx={{
+                    background: "var(--c_header_table)",
+                    "& .MuiTableCell-head": {
+                      fontWeight: 600, // chữ đậm
+                      color: "#374151", // màu chữ tối
+                    },
+                  }}
+                >
+                  <TableRow>
+                    <TableCell>Tên CTV</TableCell>
+                    <TableCell>Tên khách hàng</TableCell>
+                    <TableCell>Nội dung</TableCell>
+                    <TableCell>Thời gian</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody
+                  sx={{
+                    "& .MuiTableCell-root": {
+                      color: "#4b5563", // màu chữ body
+                      borderBottom: "1px solid #e5e7eb", // đường kẻ mảnh
+                    },
+                    "& .MuiTableRow-root:hover": {
+                      backgroundColor: "#f3f4f6", // hover nhạt
+                    },
+                  }}
+                >
+                  {paginatedData.map((chat, idx) => (
+                    <TableRow key={idx}>
+                      <TableCell>{chat.ctv_name}</TableCell>
+                      <TableCell>{chat.customer_name}</TableCell>
+                      <TableCell>{chat.recentChat || "--"}</TableCell>
+                      <TableCell>{formatTime(chat.time)}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
 
-          {dialogTitle === "Danh sách hội thoại hôm nay" &&
-            dialogData.map((chat) => (
-              <div
-                key={chat.thread_id}
-                style={{ padding: "8px 0", borderBottom: "1px solid #eee" }}
+            {dialogTitle === "Danh sách hội thoại hôm nay" && (
+              <Table
+                sx={{
+                  borderRadius: 2,
+                  overflow: "hidden",
+                  boxShadow: "0px 2px 8px rgba(0,0,0,0.05)",
+                }}
               >
-                <strong>{chat.ctv_name}</strong> với khách{" "}
-                <em>{chat.customer_name}</em> <br />
-                <small>
-                  Thời gian: {new Date(Number(chat.time)).toLocaleString()}
-                </small>
-              </div>
-            ))}
-        </DialogContent>
+                <TableHead
+                  sx={{
+                    background: "var(--c_header_table)",
+                    "& .MuiTableCell-head": {
+                      fontWeight: 600, // chữ đậm
+                      color: "#374151", // màu chữ tối
+                    },
+                  }}
+                >
+                  <TableRow>
+                    <TableCell>Tên CTV</TableCell>
+                    <TableCell>Tên khách hàng</TableCell>
+                    <TableCell>Nội dung</TableCell>
+                    <TableCell>Thời gian</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody
+                  sx={{
+                    "& .MuiTableCell-root": {
+                      color: "#4b5563", // màu chữ body
+                      borderBottom: "1px solid #e5e7eb", // đường kẻ mảnh
+                    },
+                    "& .MuiTableRow-root:hover": {
+                      backgroundColor: "#f3f4f6", // hover nhạt
+                    },
+                  }}
+                >
+                  {paginatedData.map((chat, idx) => (
+                    <TableRow key={idx}>
+                      <TableCell>{chat.ctv_name}</TableCell>
+                      <TableCell>{chat.customer_name}</TableCell>
+                      <TableCell>{chat.recentChat || "--"}</TableCell>
+                      <TableCell>{formatTime(chat.time)}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
+          </DialogContent>
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              mt: 2,
+              px: 1,
+            }}
+          >
+            <Typography fontSize={14} color="text.secondary">
+              Showing{" "}
+              {Math.min(rowsPerPage, dialogData.length - page * rowsPerPage)} of{" "}
+              {dialogData.length}
+            </Typography>
+
+            <Box sx={{ display: "flex", gap: 1 }}>
+              <Button
+                size="small"
+                disabled={page === 0}
+                onClick={() => setPage((prev) => prev - 1)}
+                sx={{ textTransform: "none" }}
+              >
+                Prev
+              </Button>
+
+              {Array.from({
+                length: Math.ceil(dialogData.length / rowsPerPage),
+              }).map((_, i) => (
+                <Button
+                  key={i}
+                  size="small"
+                  variant={i === page ? "contained" : "outlined"}
+                  onClick={() => setPage(i)}
+                  sx={{
+                    minWidth: 32,
+                    p: "2px 8px",
+                    textTransform: "none",
+                  }}
+                >
+                  {i + 1}
+                </Button>
+              ))}
+
+              <Button
+                size="small"
+                disabled={
+                  page >= Math.ceil(dialogData.length / rowsPerPage) - 1
+                }
+                onClick={() => setPage((prev) => prev + 1)}
+                sx={{ textTransform: "none" }}
+              >
+                Next
+              </Button>
+            </Box>
+          </Box>
+        </Box>
+
         <DialogActions>
-          <Button onClick={() => setOpenDialog(false)}>Đóng</Button>
+          <Button
+          variant="contained"
+            onClick={() => setOpenDialog(false)}
+            sx={{ textTransform: "none", background: "var(--b_liner)" }}
+          >
+            Đóng
+          </Button>
         </DialogActions>
       </Dialog>
 

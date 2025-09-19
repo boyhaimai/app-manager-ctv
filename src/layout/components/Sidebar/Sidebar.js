@@ -6,6 +6,7 @@ import MenuCustom from "./Menu";
 import MenuItemCustom from "./Menu/MenuItem";
 import config from "~/config";
 import {
+  AdminPanelSettings,
   Dashboard,
   ErrorRounded,
   Logout,
@@ -82,40 +83,38 @@ function Sidebar() {
     <>
       <aside className={cx("wrapper")}>
         <h4 className={cx("title")}>Administration</h4>
-        {role === 1 && (
-          <MenuCustom>
-            <MenuItemCustom
-              title="Tổng quan"
-              to={config.routes.manager_page}
-              icon={<Dashboard className={cx("icon_menu")} />}
-            />
 
-            <Box className={cx("support")}>
+        <MenuCustom>
+          <MenuItemCustom
+            title="Tổng quan"
+            to={config.routes.manager_page}
+            icon={<Dashboard className={cx("icon_menu")} />}
+          />
+          {role === 0 && (
+            <MenuCustom>
               <MenuItemCustom
-                title="Cài đặt"
-                to="/profile"
-                icon={<SettingsRounded className={cx("icon_menu")} />}
+                title="Dashboard Admin"
+                to={config.routes.admin}
+                icon={<AdminPanelSettings className={cx("icon_menu")} />}
               />
-              <MenuItemCustom
-                title="About us"
-                to="https://vaway.vn/"
-                target="_blank"
-                icon={<ErrorRounded className={cx("icon_menu")} />}
-              />
-            </Box>
-          </MenuCustom>
-        )}
+            </MenuCustom>
+          )}
 
-        {/* Nếu role = 0 => menu admin */}
-        {role === 0 && (
-          <MenuCustom>
+          <Box className={cx("support")}>
             <MenuItemCustom
-              title="Dashboard Admin"
-              to={config.routes.admin}
-              icon={<Dashboard className={cx("icon_menu")} />}
+              title="Cài đặt"
+              to="/profile"
+              icon={<SettingsRounded className={cx("icon_menu")} />}
             />
-          </MenuCustom>
-        )}
+            <MenuItemCustom
+              title="About us"
+              to="https://vaway.vn/"
+              target="_blank"
+              icon={<ErrorRounded className={cx("icon_menu")} />}
+            />
+          </Box>
+        </MenuCustom>
+
         <Box
           sx={{
             display: "flex",

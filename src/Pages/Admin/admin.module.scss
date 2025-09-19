@@ -55,6 +55,13 @@
   align-items: center;
   z-index: 2000;
 }
+.title_table{
+  font-size: 20px !important;
+  font-weight: 700 !important;
+  text-align: left !important;
+  color: #333 !important;
+
+}
 @media (max-width: 768px) {
   .wrapper {
     width: 100%;

@@ -50,8 +50,7 @@ const urlGetInfoAdmin = "https://wf.mkt04.vawayai.com/webhook/admin";
 const urlUpdateBloack = "https://wf.mkt04.vawayai.com/webhook/update_banded";
 const urlDeleteAccount = "https://wf.mkt04.vawayai.com/webhook/delete_account";
 const urlSetRole = "https://wf.mkt04.vawayai.com/webhook/set_role";
-const urlUpdateExpire =
-  "https://wf.mkt04.vawayai.com/webhook/update_expire";
+const urlUpdateExpire = "https://wf.mkt04.vawayai.com/webhook/update_expire";
 
 const roleMap = {
   0: { label: "Admin", icon: Shield, color: "error" },
@@ -90,6 +89,8 @@ const AdminDashboard = () => {
   const [subMenuAnchorEl, setSubMenuAnchorEl] = useState(null);
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
   const [pendingRole, setPendingRole] = useState(null);
+  const [page, setPage] = useState(0);
+  const rowsPerPage = 10;
 
   useEffect(() => {
     const fetchData = async () => {
@@ -242,7 +243,10 @@ const AdminDashboard = () => {
     );
   });
 
-  console.log(selectedUser, "selectedUser");
+  const paginatedUsers = filteredUsers.slice(
+    page * rowsPerPage,
+    page * rowsPerPage + rowsPerPage
+  );
 
   const handleMoreMenuOpen = (event, user) => {
     console.log("👉 Open menu cho user:", user);
@@ -423,7 +427,7 @@ const AdminDashboard = () => {
         </Typography>
       </Box>
       <div style={{ minHeight: "100vh", padding: "24px", marginTop: "50px" }}>
-        <div style={{ width: "100%", maxWidth: "1200px" }}>
+        <div style={{ width: "100%" }}>
           {/* Header */}
           <div
             style={{
@@ -458,7 +462,7 @@ const AdminDashboard = () => {
               <CardContent>
                 <Typography variant="h5">{stats.total_accounts}</Typography>
                 <Typography variant="caption" color="success.main">
-                  +2 từ tuần trước
+                  Tổng số tài khoản hệ thống
                 </Typography>
               </CardContent>
             </Card>
@@ -489,303 +493,408 @@ const AdminDashboard = () => {
           </div>
 
           {/* Users Table */}
-          <Card style={{ marginTop: "24px" }}>
-            <Box
+          <Box
+            sx={{ display: "flex", flexDirection: "column", height: " 100%" }}
+          >
+            <Card
               sx={{
+                marginTop: "24px",
                 display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                mb: 2,
+                flexDirection: "column",
+                height: "70vh",
               }}
             >
-              <CardHeader
-                title="Danh sách người dùng"
-                subheader="Quản lý thông tin và phân quyền cho từng tài khoản"
-              />
               <Box
                 sx={{
                   display: "flex",
+                  justifyContent: "space-between",
                   alignItems: "center",
-                  gap: "8px",
-                  mr: 2,
+                  mb: 2,
                 }}
               >
-                <TextField
-                  size="small"
-                  variant="outlined"
-                  placeholder="Tìm kiếm..."
-                  value={searchInput}
-                  onChange={(e) => {
-                    const val = e.target.value;
-                    setSearchInput(val);
-                    if (val === "") {
-                      setSearchTerm(""); // reset khi xoá hết
-                    }
-                  }}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      setSearchTerm(searchInput);
-                    }
-                  }}
-                  sx={{ width: 250, borderRadius: "10px" }}
-                  InputProps={{
-                    endAdornment: searchInput && (
-                      <Button
-                        onClick={() => {
-                          setSearchInput("");
-                          setSearchTerm("");
-                        }}
-                        sx={{ minWidth: "30px" }}
-                      >
-                        <Close fontSize="10px" />
-                      </Button>
-                    ),
-                  }}
+                <CardHeader
+                  title="Danh sách người dùng"
+                  subheader="Quản lý thông tin và phân quyền cho từng tài khoản"
                 />
-                <Button
-                  variant="contained"
-                  onClick={() => setSearchTerm(searchInput)}
+                <Box
                   sx={{
-                    minWidth: "40px",
-                    borderRadius: "8px",
-                    background: "var(--b_liner)",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px",
+                    mr: 2,
                   }}
                 >
-                  <Search fontSize="small" />
-                </Button>
+                  <TextField
+                    size="small"
+                    variant="outlined"
+                    placeholder="Tìm kiếm..."
+                    value={searchInput}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setSearchInput(val);
+                      if (val === "") {
+                        setSearchTerm(""); // reset khi xoá hết
+                      }
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        setSearchTerm(searchInput);
+                      }
+                    }}
+                    sx={{ width: 250, borderRadius: "10px" }}
+                    InputProps={{
+                      endAdornment: searchInput && (
+                        <Button
+                          onClick={() => {
+                            setSearchInput("");
+                            setSearchTerm("");
+                          }}
+                          sx={{ minWidth: "30px" }}
+                        >
+                          <Close fontSize="10px" />
+                        </Button>
+                      ),
+                    }}
+                  />
+                  <Button
+                    variant="contained"
+                    onClick={() => setSearchTerm(searchInput)}
+                    sx={{
+                      minWidth: "40px",
+                      borderRadius: "8px",
+                      background: "var(--b_liner)",
+                    }}
+                  >
+                    <Search fontSize="small" />
+                  </Button>
+                </Box>
               </Box>
-            </Box>
-            <CardContent>
-              <Table>
-                <TableHead>
-                  <TableRow>
-                    <TableCell>Trạng thái</TableCell>
-                    <TableCell>Tên người dùng</TableCell>
-                    <TableCell>Số điện thoại</TableCell>
-                    <TableCell>Thời gian tạo</TableCell>
-                    <TableCell>Thời gian hết hạn</TableCell>
-                    <TableCell>Vai trò</TableCell>
-                    <TableCell>Thao tác</TableCell>
-                    <TableCell></TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {filteredUsers.map((user, index) => {
-                    const roleInfo = roleMap[user.role] || roleMap[2];
-                    const IconComponent = roleInfo.icon;
-                    return (
-                      <TableRow key={user.id}>
-                        <TableCell>
-                          {user.expire_at === "0" ? (
-                            <RadioButtonChecked
-                              sx={{ color: "green", fontSize: "20px" }}
-                            />
-                          ) : new Date(user.expire_at) > new Date() ? (
-                            <RadioButtonChecked
-                              sx={{ color: "green", fontSize: "20px" }}
-                            />
-                          ) : (
-                            <RadioButtonChecked
-                              sx={{ color: "red", fontSize: "20px" }}
-                            />
-                          )}
-                        </TableCell>
-                        <TableCell>{user.name_customer}</TableCell>
-                        <TableCell>{user.phone}</TableCell>
-                        <TableCell>
-                          {new Date(user.created_at).toLocaleString("vi-VN", {
-                            year: "numeric",
-                            month: "2-digit",
-                            day: "2-digit",
-                            hour: "2-digit",
-                            minute: "2-digit",
-                            second: "2-digit",
-                          })}
-                        </TableCell>
-
-                        <TableCell>
-                          {user.expire_at === "0"
-                            ? "Vô hạn"
-                            : new Date(user.expire_at).toLocaleString("vi-VN", {
-                                year: "numeric",
-                                month: "2-digit",
-                                day: "2-digit",
-                                hour: "2-digit",
-                                minute: "2-digit",
-                                second: "2-digit",
-                              })}
-                        </TableCell>
-
-                        <TableCell>
-                          <Badge
-                            label={roleInfo.label}
-                            color={roleInfo.color}
-                            icon={<IconComponent size={14} />}
-                            variant="outlined"
-                          />
-                        </TableCell>
-                        <TableCell>
-                          <Button
-                            variant="outlined"
-                            size="small"
-                            endIcon={<ChevronDown size={16} />}
-                            onClick={(e) => handleMenuOpen(e, user)}
-                            sx={{ textTransform: "none", outline: "none" }}
-                          >
-                            Đổi vai trò
-                          </Button>
-                        </TableCell>
-                        <TableCell>
-                          <EllipsisVertical
-                            size={16}
-                            onClick={(e) => handleMoreMenuOpen(e, user)}
-                          />
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-
-                {/* More menu đặt ngoài map */}
-                <Menu
-                  anchorEl={moreAnchorEl}
-                  open={Boolean(moreAnchorEl)}
-                  onClose={handleMoreMenuClose}
-                >
-                  {/* Gia hạn có submenu */}
-                  <MenuItem
-                    onClick={(e) => setSubMenuAnchorEl(e.currentTarget)}
+              <CardContent sx={{ flex: 1, overflowY: "auto", padding: 0 }}>
+                <Table >
+                  <TableHead
+                    // sx={{
+                    //   background: "var(--c_header_table)",                     
+                    // }}
                   >
-                    <LockOpen
-                      style={{ marginRight: "8px", fontSize: "20px" }}
-                    />
-                    Gia hạn
-                    <KeyboardArrowRight
-                      fontSize="small"
-                      style={{ marginLeft: "auto" }}
-                    />
-                  </MenuItem>
+                    <TableRow sx={{ background: "var(--c_header_table) !important" }}>
+                      <TableCell className={cx("title_table")}>
+                        Trạng thái
+                      </TableCell>
+                      <TableCell className={cx("title_table")}>
+                        Tên người dùng
+                      </TableCell>
+                      <TableCell className={cx("title_table")}>
+                        Số điện thoại
+                      </TableCell>
+                      <TableCell className={cx("title_table")}>
+                        Thời gian tạo
+                      </TableCell>
+                      <TableCell className={cx("title_table")}>
+                        Thời gian hết hạn
+                      </TableCell>
+                      <TableCell className={cx("title_table")}>
+                        Vai trò
+                      </TableCell>
+                      <TableCell className={cx("title_table")}>
+                        Thao tác
+                      </TableCell>
+                      <TableCell className={cx("title_table")}></TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody
+                    sx={{
+                      "& .MuiTableRow-root:hover": {
+                        background: "#f9fafb",
+                        cursor: "pointer",
+                      },
+                    }}
+                  >
+                    {paginatedUsers.map((user) => {
+                      const roleInfo = roleMap[user.role] || roleMap[2];
+                      const IconComponent = roleInfo.icon;
+                      return (
+                        <TableRow key={user.id}>
+                          <TableCell align="center">
+                            {user.expire_at === "0" ? (
+                              <RadioButtonChecked
+                                sx={{ color: "green", fontSize: "20px" }}
+                              />
+                            ) : new Date(user.expire_at) > new Date() ? (
+                              <RadioButtonChecked
+                                sx={{ color: "green", fontSize: "20px" }}
+                              />
+                            ) : (
+                              <RadioButtonChecked
+                                sx={{ color: "red", fontSize: "20px" }}
+                              />
+                            )}
+                          </TableCell>
+                          <TableCell>{user.name_customer}</TableCell>
+                          <TableCell>{user.phone}</TableCell>
+                          <TableCell>
+                            {new Date(user.created_at).toLocaleString("vi-VN", {
+                              year: "numeric",
+                              month: "2-digit",
+                              day: "2-digit",
+                              hour: "2-digit",
+                              minute: "2-digit",
+                              second: "2-digit",
+                            })}
+                          </TableCell>
 
-                  {/* Submenu */}
+                          <TableCell>
+                            {user.expire_at === "0"
+                              ? "Vô hạn"
+                              : new Date(user.expire_at).toLocaleString(
+                                  "vi-VN",
+                                  {
+                                    year: "numeric",
+                                    month: "2-digit",
+                                    day: "2-digit",
+                                    hour: "2-digit",
+                                    minute: "2-digit",
+                                    second: "2-digit",
+                                  }
+                                )}
+                          </TableCell>
+
+                          <TableCell>
+                            <Badge
+                              label={roleInfo.label}
+                              color={roleInfo.color}
+                              icon={<IconComponent size={14} />}
+                              variant="outlined"
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <Button
+                              variant="outlined"
+                              size="small"
+                              endIcon={<ChevronDown size={16} />}
+                              onClick={(e) => handleMenuOpen(e, user)}
+                              sx={{ textTransform: "none", outline: "none" }}
+                            >
+                              Đổi vai trò
+                            </Button>
+                          </TableCell>
+                          <TableCell>
+                            <EllipsisVertical
+                              size={16}
+                              onClick={(e) => handleMoreMenuOpen(e, user)}
+                            />
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+
+                  {/* More menu đặt ngoài map */}
                   <Menu
-                    anchorEl={subMenuAnchorEl}
-                    open={Boolean(subMenuAnchorEl)}
-                    onClose={handleSubMenuClose}
-                    anchorOrigin={{
-                      vertical: "top",
-                      horizontal: "right",
-                    }}
-                    transformOrigin={{
-                      vertical: "top",
-                      horizontal: "left",
-                    }}
-                    MenuListProps={{
-                      onMouseLeave: handleSubMenuClose,
-                    }}
+                    anchorEl={moreAnchorEl}
+                    open={Boolean(moreAnchorEl)}
+                    onClose={handleMoreMenuClose}
                   >
-                    <MenuItem onClick={() => handleExtendExpire("2 tuần")}>
-                      2 tuần
+                    {/* Gia hạn có submenu */}
+                    <MenuItem
+                      onClick={(e) => setSubMenuAnchorEl(e.currentTarget)}
+                    >
+                      <LockOpen
+                        style={{ marginRight: "8px", fontSize: "20px" }}
+                      />
+                      Gia hạn
+                      <KeyboardArrowRight
+                        fontSize="small"
+                        style={{ marginLeft: "auto" }}
+                      />
                     </MenuItem>
-                    <MenuItem onClick={() => handleExtendExpire("3 tháng")}>
-                      3 tháng
+
+                    {/* Submenu */}
+                    <Menu
+                      anchorEl={subMenuAnchorEl}
+                      open={Boolean(subMenuAnchorEl)}
+                      onClose={handleSubMenuClose}
+                      anchorOrigin={{
+                        vertical: "top",
+                        horizontal: "right",
+                      }}
+                      transformOrigin={{
+                        vertical: "top",
+                        horizontal: "left",
+                      }}
+                      MenuListProps={{
+                        onMouseLeave: handleSubMenuClose,
+                      }}
+                    >
+                      <MenuItem onClick={() => handleExtendExpire("2 tuần")}>
+                        2 tuần
+                      </MenuItem>
+                      <MenuItem onClick={() => handleExtendExpire("3 tháng")}>
+                        3 tháng
+                      </MenuItem>
+                      <MenuItem onClick={() => handleExtendExpire("6 tháng")}>
+                        6 tháng
+                      </MenuItem>
+                      <MenuItem onClick={() => handleExtendExpire("9 tháng")}>
+                        9 tháng
+                      </MenuItem>
+                      <MenuItem onClick={() => handleExtendExpire("1 năm")}>
+                        1 năm
+                      </MenuItem>
+                    </Menu>
+
+                    {/* Chặn tài khoản */}
+                    <MenuItem>
+                      <Ban style={{ marginRight: "8px", fontSize: "20px" }} />
+                      Chặn tài khoản này
+                      <Switch
+                        checked={selectedUser?.is_ban || false}
+                        onChange={async () => {
+                          if (!selectedUser) return;
+                          const newStatus = !selectedUser.is_ban;
+                          try {
+                            const token = localStorage.getItem("token");
+                            const res = await fetch(urlUpdateBloack, {
+                              method: "POST",
+                              headers: {
+                                "Content-Type": "application/json",
+                                Authorization: `Bearer ${token}`,
+                              },
+                              body: JSON.stringify({
+                                user_id: selectedUser.id,
+                                phone: selectedUser.phone,
+                                is_ban: newStatus,
+                              }),
+                            });
+                            const result = await res.json();
+                            if (result[0]?.success) {
+                              setUsers(
+                                users.map((u) =>
+                                  u.id === selectedUser.id
+                                    ? { ...u, is_ban: newStatus }
+                                    : u
+                                )
+                              );
+                              setSelectedUser({
+                                ...selectedUser,
+                                is_ban: newStatus,
+                              });
+                            }
+                          } catch (err) {
+                            console.error("Lỗi update block:", err);
+                          }
+                        }}
+                        sx={{ ml: "auto" }}
+                      />
                     </MenuItem>
-                    <MenuItem onClick={() => handleExtendExpire("6 tháng")}>
-                      6 tháng
-                    </MenuItem>
-                    <MenuItem onClick={() => handleExtendExpire("9 tháng")}>
-                      9 tháng
-                    </MenuItem>
-                    <MenuItem onClick={() => handleExtendExpire("1 năm")}>
-                      1 năm
+
+                    <MenuItem
+                      onClick={() => handleOpenDeleteDialog(selectedUser)}
+                    >
+                      <Delete
+                        style={{ marginRight: "8px", fontSize: "20px" }}
+                      />
+                      Xóa tài khoản
                     </MenuItem>
                   </Menu>
+                </Table>
 
-                  {/* Chặn tài khoản */}
-                  <MenuItem>
-                    <Ban style={{ marginRight: "8px", fontSize: "20px" }} />
-                    Chặn tài khoản này
-                    <Switch
-                      checked={selectedUser?.is_ban || false}
-                      onChange={async () => {
-                        if (!selectedUser) return;
-                        const newStatus = !selectedUser.is_ban;
-                        try {
-                          const token = localStorage.getItem("token");
-                          const res = await fetch(urlUpdateBloack, {
-                            method: "POST",
-                            headers: {
-                              "Content-Type": "application/json",
-                              Authorization: `Bearer ${token}`,
-                            },
-                            body: JSON.stringify({
-                              user_id: selectedUser.id,
-                              phone: selectedUser.phone,
-                              is_ban: newStatus,
-                            }),
-                          });
-                          const result = await res.json();
-                          if (result[0]?.success) {
-                            setUsers(
-                              users.map((u) =>
-                                u.id === selectedUser.id
-                                  ? { ...u, is_ban: newStatus }
-                                  : u
-                              )
-                            );
-                            setSelectedUser({
-                              ...selectedUser,
-                              is_ban: newStatus,
-                            });
-                          }
-                        } catch (err) {
-                          console.error("Lỗi update block:", err);
-                        }
-                      }}
-                      sx={{ ml: "auto" }}
-                    />
-                  </MenuItem>
+                <Box
+                  sx={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    p: 2,
+                    borderTop: "1px solid #e5e7eb",
+                  }}
+                >
+                  <Typography fontSize={14} color="text.secondary">
+                    Showing{" "}
+                    {Math.min(
+                      rowsPerPage,
+                      filteredUsers.length - page * rowsPerPage
+                    )}{" "}
+                    of {filteredUsers.length}
+                  </Typography>
 
+                  <Box sx={{ display: "flex", gap: 1 }}>
+                    <Button
+                      size="small"
+                      disabled={page === 0}
+                      onClick={() => setPage((prev) => prev - 1)}
+                      sx={{ textTransform: "none" }}
+                    >
+                      Prev
+                    </Button>
+
+                    {Array.from({
+                      length: Math.ceil(filteredUsers.length / rowsPerPage),
+                    }).map((_, i) => (
+                      <Button
+                        key={i}
+                        size="small"
+                        variant={i === page ? "contained" : "outlined"}
+                        onClick={() => setPage(i)}
+                        sx={{
+                          minWidth: 32,
+                          p: "2px 8px",
+                          textTransform: "none",
+                        }}
+                      >
+                        {i + 1}
+                      </Button>
+                    ))}
+
+                    <Button
+                      size="small"
+                      disabled={
+                        page >=
+                        Math.ceil(filteredUsers.length / rowsPerPage) - 1
+                      }
+                      onClick={() => setPage((prev) => prev + 1)}
+                      sx={{ textTransform: "none" }}
+                    >
+                      Next
+                    </Button>
+                  </Box>
+                </Box>
+
+                {/* Dropdown menu */}
+                <Menu
+                  anchorEl={anchorEl}
+                  open={Boolean(anchorEl)}
+                  onClose={handleMenuClose}
+                >
                   <MenuItem
-                    onClick={() => handleOpenDeleteDialog(selectedUser)}
+                    onClick={() =>
+                      setPendingRole({
+                        userId: selectedUser?.id,
+                        role: "admin",
+                      })
+                    }
                   >
-                    <Delete style={{ marginRight: "8px", fontSize: "20px" }} />
-                    Xóa tài khoản
+                    <Shield size={16} style={{ marginRight: "8px" }} /> Admin
                   </MenuItem>
+                  <MenuItem
+                    onClick={() =>
+                      setPendingRole({
+                        userId: selectedUser?.id,
+                        role: "manager",
+                      })
+                    }
+                  >
+                    <UserCheck size={16} style={{ marginRight: "8px" }} /> Quản
+                    lý
+                  </MenuItem>
+
+                  {/* <MenuItem
+                    onClick={() => updateUserRole(selectedUser?.id, "viewer")}
+                  >
+                    <Eye size={16} style={{ marginRight: "8px" }} /> Người xem
+                  </MenuItem> */}
                 </Menu>
-              </Table>
-
-              {/* Dropdown menu */}
-              <Menu
-                anchorEl={anchorEl}
-                open={Boolean(anchorEl)}
-                onClose={handleMenuClose}
-              >
-                <MenuItem
-                  onClick={() =>
-                    setPendingRole({ userId: selectedUser?.id, role: "admin" })
-                  }
-                >
-                  <Shield size={16} style={{ marginRight: "8px" }} /> Admin
-                </MenuItem>
-                <MenuItem
-                  onClick={() =>
-                    setPendingRole({
-                      userId: selectedUser?.id,
-                      role: "manager",
-                    })
-                  }
-                >
-                  <UserCheck size={16} style={{ marginRight: "8px" }} /> Quản lý
-                </MenuItem>
-
-                {/* <MenuItem
-                  onClick={() => updateUserRole(selectedUser?.id, "viewer")}
-                >
-                  <Eye size={16} style={{ marginRight: "8px" }} /> Người xem
-                </MenuItem> */}
-              </Menu>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </Box>
           <Dialog
             open={openDeleteDialog}
             onClose={() => setOpenDeleteDialog(false)}
