@@ -38,6 +38,8 @@ import {
   Close,
   InfoOutlined,
   Dehaze,
+  ChevronLeft,
+  ChevronRight,
 } from "@mui/icons-material";
 import {
   CartesianGrid,
@@ -688,7 +690,7 @@ function ManagePage() {
                   > */}
                   <Grid item xs={12}>
                     <Paper sx={{ p: 2, borderRadius: 2 }}>
-                      <Typography fontWeight="bold" fontSize={16} mb={2}>
+                      <Typography fontWeight="bold" fontSize={18} mb={2}>
                         Tổng số hội thoại trong từng tháng
                       </Typography>
                       <ResponsiveContainer width="100%" height={300}>
@@ -934,7 +936,12 @@ function ManagePage() {
             <Box>
               <Typography
                 variant="h6"
-                sx={{ fontWeight: 600, mb: 2, color: "#020202b4" }}
+                sx={{
+                  fontWeight: 600,
+                  mb: 2,
+                  color: "#020202b4",
+                  fontSize: 18,
+                }}
               >
                 Cấu hình Webhook cho dự án
               </Typography>
@@ -947,7 +954,7 @@ function ManagePage() {
                     sx={{
                       fontWeight: 600,
                       color: "#333 !important",
-                      fontSize: 20,
+                      fontSize: 16,
                       textTransform: "none",
                       float: "right",
                     }}
@@ -988,6 +995,9 @@ function ManagePage() {
                     get_ctv: e.target.value,
                   })
                 }
+                InputProps={{
+                  sx: { fontSize: 16 },
+                }}
               />
 
               {/* Webhook hội thoại */}
@@ -1019,6 +1029,9 @@ function ManagePage() {
                     get_chat: e.target.value,
                   })
                 }
+                InputProps={{
+                  sx: { fontSize: 16 },
+                }}
               />
 
               {/* Webhook message */}
@@ -1050,6 +1063,9 @@ function ManagePage() {
                     get_message: e.target.value,
                   })
                 }
+                InputProps={{
+                  sx: { fontSize: 16 },
+                }}
               />
             </Box>
           </Box>
@@ -1061,7 +1077,18 @@ function ManagePage() {
         fullWidth
         maxWidth="xl"
       >
-        <DialogTitle>{dialogTitle}</DialogTitle>
+        <Box sx={{ display: "flex", justifyContent: "space-between" }}>
+          <DialogTitle>{dialogTitle}</DialogTitle>
+          <DialogActions>
+            <Button
+              variant="contained"
+              onClick={() => setOpenDialog(false)}
+              sx={{ textTransform: "none", background: "var(--b_liner)" }}
+            >
+              Đóng
+            </Button>
+          </DialogActions>
+        </Box>
         <Box
           sx={{
             display: "flex",
@@ -1222,6 +1249,8 @@ function ManagePage() {
               alignItems: "center",
               mt: 2,
               px: 1,
+              mb: 1,
+              pb: 1,
             }}
           >
             <Typography fontSize={14} color="text.secondary">
@@ -1232,12 +1261,21 @@ function ManagePage() {
 
             <Box sx={{ display: "flex", gap: 1 }}>
               <Button
-                size="small"
+                variant="contained"
                 disabled={page === 0}
                 onClick={() => setPage((prev) => prev - 1)}
-                sx={{ textTransform: "none" }}
+                sx={{
+                  textTransform: "none",
+                  minWidth: 32,
+                  p: "2px 8px",
+                  background: "var(--b_liner)",
+                  "&.Mui-disabled": {
+                    background: "#ccc", // màu khi disabled
+                    color: "#666", // màu icon/text khi disabled
+                  },
+                }}
               >
-                Prev
+                <ChevronLeft sx={{ fontSize: 32, color: "#fff" }} />
               </Button>
 
               {Array.from({
@@ -1259,28 +1297,27 @@ function ManagePage() {
               ))}
 
               <Button
-                size="small"
+                variant="contained"
                 disabled={
                   page >= Math.ceil(dialogData.length / rowsPerPage) - 1
                 }
                 onClick={() => setPage((prev) => prev + 1)}
-                sx={{ textTransform: "none" }}
+                sx={{
+                  textTransform: "none",
+                  minWidth: 32,
+                  p: "2px 8px",
+                  background: "var(--b_liner)",
+                  "&.Mui-disabled": {
+                    background: "#ccc", // màu khi disabled
+                    color: "#666", // màu icon/text khi disabled
+                  },
+                }}
               >
-                Next
+                <ChevronRight sx={{ fontSize: 32, color: "#fff" }} />
               </Button>
             </Box>
           </Box>
         </Box>
-
-        <DialogActions>
-          <Button
-            variant="contained"
-            onClick={() => setOpenDialog(false)}
-            sx={{ textTransform: "none", background: "var(--b_liner)" }}
-          >
-            Đóng
-          </Button>
-        </DialogActions>
       </Dialog>
 
       <Snackbar

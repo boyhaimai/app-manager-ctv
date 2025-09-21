@@ -12,7 +12,11 @@ const urlGetConfigWithId =
 function CTVList({ onSelect }) {
   const [ctvData, setCtvData] = useState([]);
   const { configId, ctvId } = useParams();
-  const { setConfig } = useConfig();
+  const { config, setConfig } = useConfig();
+  const [page, setPage] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
+  const limit = 20;
 
   useEffect(() => {
     if (!configId) return;
@@ -31,14 +35,19 @@ function CTVList({ onSelect }) {
         const result = Array.isArray(data) ? data[0] : data;
         if (result) {
           setConfig(result);
-          // load toàn bộ CTV 1 lần
-          loadCTVs(result.get_ctv);
+          setCtvData([]);
+          setPage(0);
+          setHasMore(true);
+          loadCTVs(result.get_ctv, 0);
         }
       })
       .catch((err) => console.error("Lỗi:", err));
   }, [configId, setConfig]);
 
-  const loadCTVs = (url) => {
+  const loadCTVs = (url, pageNum = 0) => {
+    if (isLoading || !url) return;
+    setIsLoading(true);
+
     fetch(url, {
       method: "POST",
       headers: {
@@ -47,17 +56,28 @@ function CTVList({ onSelect }) {
       },
       body: JSON.stringify({
         action: "get_ctv_list",
-        // limit/offset bỏ đi để backend trả full list
+        limit,
+        offset: pageNum * limit,
       }),
     })
       .then((res) => res.json())
       .then((data) => {
         const result = Array.isArray(data) ? data[0]?.result : data?.result;
-        if (result?.ctvData) {
-          setCtvData(result.ctvData);
-        }
+        const newList = result?.ctvData || [];
+
+        if (newList.length < limit) setHasMore(false);
+
+        setCtvData((prev) => {
+          const merged = [...prev, ...newList];
+          const unique = merged.filter(
+            (item, index, self) =>
+              index === self.findIndex((t) => t.id === item.id)
+          );
+          return unique;
+        });
       })
-      .catch((err) => console.error("Lỗi:", err));
+      .catch((err) => console.error("Lỗi:", err))
+      .finally(() => setIsLoading(false));
   };
 
   return (
@@ -86,7 +106,31 @@ function CTVList({ onSelect }) {
             </Link>
           </li>
         ))}
-      </ul>    
+      </ul>
+      {hasMore ? (
+        <div style={{ textAlign: "center", padding: 10 }}>
+          <button
+            onClick={() => {
+              const nextPage = page + 1;
+              setPage(nextPage);
+              loadCTVs(config?.get_ctv, nextPage);
+            }}
+            disabled={isLoading}
+            style={{
+              padding: "8px 16px",
+              borderRadius: "6px",
+              border: "1px solid #764ba2",
+              background: "#764ba2",
+              color: "#fff",
+              cursor: "pointer",
+            }}
+          >
+            {isLoading ? "Đang tải..." : "Xem thêm"}
+          </button>
+        </div>
+      ) : (
+        <p style={{ textAlign: "center", fontSize: "16px" }}>Hết danh sách</p>
+      )}
     </div>
   );
 }

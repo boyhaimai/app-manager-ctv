@@ -37,6 +37,8 @@ import {
 
 import styles from "./admin.module.scss";
 import {
+  ChevronLeft,
+  ChevronRight,
   Close,
   Delete,
   KeyboardArrowRight,
@@ -489,36 +491,58 @@ const AdminDashboard = () => {
             }}
           >
             <Card>
-              <CardHeader title="Tổng tài khoản" />
+              <CardHeader
+                title="Tổng tài khoản"
+                titleTypographyProps={{ fontSize: 22, fontWeight: "bold" }}
+              />
               <CardContent>
                 <Typography variant="h5">{stats.total_accounts}</Typography>
-                <Typography variant="caption" color="success.main">
+                <Typography
+                  variant="caption"
+                  color="success.main"
+                  sx={{ fontSize: 14 }}
+                >
                   Tổng số tài khoản hệ thống
                 </Typography>
               </CardContent>
             </Card>
 
             <Card>
-              <CardHeader title="Admin" />
+              <CardHeader
+                title="Admin"
+                titleTypographyProps={{ fontSize: 22, fontWeight: "bold" }}
+              />
               <CardContent>
                 <Typography variant="h5">{stats.total_admin}</Typography>
-                <Typography variant="caption">Quyền cao nhất</Typography>
+                <Typography variant="caption" sx={{ fontSize: 14 }}>
+                  Quyền cao nhất
+                </Typography>
               </CardContent>
             </Card>
 
             <Card>
-              <CardHeader title="Quản lý" />
+              <CardHeader
+                title="Quản lý"
+                titleTypographyProps={{ fontSize: 22, fontWeight: "bold" }}
+              />
               <CardContent>
                 <Typography variant="h5">{stats.total_manager}</Typography>
-                <Typography variant="caption">Quyền quản lý</Typography>
+                <Typography variant="caption" sx={{ fontSize: 14 }}>
+                  Quyền quản lý
+                </Typography>
               </CardContent>
             </Card>
 
             <Card>
-              <CardHeader title="Account bị chặn" />
+              <CardHeader
+                title="Account bị chặn"
+                titleTypographyProps={{ fontSize: 22, fontWeight: "bold" }}
+              />
               <CardContent>
                 <Typography variant="h5">{stats.total_banned}</Typography>
-                <Typography variant="caption">Account Block</Typography>
+                <Typography variant="caption" sx={{ fontSize: 14 }}>
+                  Account Block
+                </Typography>
               </CardContent>
             </Card>
           </div>
@@ -546,6 +570,11 @@ const AdminDashboard = () => {
                 <CardHeader
                   title="Danh sách người dùng"
                   subheader="Quản lý thông tin và phân quyền cho từng tài khoản"
+                  titleTypographyProps={{ fontSize: 20, fontWeight: "bold" }}
+                  subheaderTypographyProps={{
+                    fontSize: 16,
+                    color: "text.secondary",
+                  }}
                 />
                 <Box
                   sx={{
@@ -602,11 +631,7 @@ const AdminDashboard = () => {
               </Box>
               <CardContent sx={{ flex: 1, overflowY: "auto", padding: 0 }}>
                 <Table>
-                  <TableHead
-                  // sx={{
-                  //   background: "var(--c_header_table)",
-                  // }}
-                  >
+                  <TableHead>
                     <TableRow
                       sx={{ background: "var(--c_header_table) !important" }}
                     >
@@ -662,9 +687,13 @@ const AdminDashboard = () => {
                               />
                             )}
                           </TableCell>
-                          <TableCell>{user.name_customer}</TableCell>
-                          <TableCell>{user.phone}</TableCell>
-                          <TableCell>
+                          <TableCell className={cx("item_table")}>
+                            {user.name_customer}
+                          </TableCell>
+                          <TableCell className={cx("item_table")}>
+                            {user.phone}
+                          </TableCell>
+                          <TableCell className={cx("item_table")}>
                             {new Date(user.created_at).toLocaleString("vi-VN", {
                               year: "numeric",
                               month: "2-digit",
@@ -675,7 +704,7 @@ const AdminDashboard = () => {
                             })}
                           </TableCell>
 
-                          <TableCell>
+                          <TableCell className={cx("item_table")}>
                             {user.expire_at === "0"
                               ? "Vô hạn"
                               : new Date(user.expire_at).toLocaleString(
@@ -691,26 +720,31 @@ const AdminDashboard = () => {
                                 )}
                           </TableCell>
 
-                          <TableCell>
+                          <TableCell className={cx("item_table")}>
                             <Badge
                               label={roleInfo.label}
                               color={roleInfo.color}
                               icon={<IconComponent size={14} />}
                               variant="outlined"
+                              sx={{ fontSize: "17px" }}
                             />
                           </TableCell>
-                          <TableCell>
+                          <TableCell className={cx("item_table")}>
                             <Button
                               variant="outlined"
                               size="small"
                               endIcon={<ChevronDown size={16} />}
                               onClick={(e) => handleMenuOpen(e, user)}
-                              sx={{ textTransform: "none", outline: "none" }}
+                              sx={{
+                                textTransform: "none",
+                                outline: "none",
+                                fontSize: "17px",
+                              }}
                             >
                               Đổi vai trò
                             </Button>
                           </TableCell>
-                          <TableCell>
+                          <TableCell className={cx("item_table")}>
                             <EllipsisVertical
                               size={16}
                               onClick={(e) => handleMoreMenuOpen(e, user)}
@@ -851,11 +885,16 @@ const AdminDashboard = () => {
 
                   <Box sx={{ display: "flex", gap: 1 }}>
                     <Button
-                      size="small"
+                      variant="contained"
                       disabled={page === 0}
                       onClick={() => setPage((prev) => prev - 1)}
+                      sx={{
+                        minWidth: 32,
+                        p: "2px 8px",
+                        textTransform: "none",
+                      }}
                     >
-                      Prev
+                      <ChevronLeft sx={{ fontSize: 32 }}/>
                     </Button>
 
                     {Array.from({
@@ -877,11 +916,16 @@ const AdminDashboard = () => {
                     ))}
 
                     <Button
-                      size="small"
+                      variant="contained"
                       disabled={!hasMore}
                       onClick={() => setPage((prev) => prev + 1)}
+                      sx={{
+                        minWidth: 32,
+                        p: "2px 8px",
+                        textTransform: "none",
+                      }}
                     >
-                      Next
+                      <ChevronRight sx={{ fontSize: 32 }}/>
                     </Button>
                   </Box>
                 </Box>
@@ -945,7 +989,7 @@ const AdminDashboard = () => {
             open={openRoleDialog}
             onClose={() => setOpenRoleDialog(false)}
           >
-            <DialogContent sx={{fontSize: 25}}>
+            <DialogContent sx={{ fontSize: 25 }}>
               Bạn có chắc chắn muốn gán quyền
               <strong>
                 {" "}

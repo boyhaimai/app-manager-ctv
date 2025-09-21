@@ -220,7 +220,7 @@
     i {
       position: absolute;
       left: 28px;
-      top: 50%;
+      top: 58%;
       transform: translateY(-50%);
       color: #999;
       font-size: 14px;
@@ -694,10 +694,14 @@
 .wrapper-header-mobile {
   background: var(--b_liner) !important;
   padding: 10px;
+  display: flex;
 }
 
 /* Responsive */
 @media (max-width: 768px) {
+  .mobile-chat{
+    width: 100%;
+  }
   .mobile-conversation {
     width: 100%;
   }
@@ -708,20 +712,27 @@
     background-image: var(--b_liner);
   }
   .mobile-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background: var(--b_liner);
-    backdrop-filter: blur(10px);
-    padding: 8px 16px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    position: relative; // Đảm bảo tạo stacking context
-    z-index: 2000;
+    // display: flex;
+    // justify-content: space-between;
+    // align-items: center;
+    // background: var(--b_liner);
+    // backdrop-filter: blur(10px);
+    // padding: 8px 16px;
+    // border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    // position: relative; // Đảm bảo tạo stacking context
+    // z-index: 2000;
+    // width: 100%;
     width: 100%;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 1000;
   }
   .chat-mobile {
-    height: calc(100vh - 90px - 20px); /* trừ header và padding */
+    height: calc(100vh); /* trừ header và padding */
     width: 100%;
+    margin-top: 60px;
+    
   }
   .conversation-section {
     width: 100%;
