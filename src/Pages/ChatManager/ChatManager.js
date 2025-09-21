@@ -4,10 +4,11 @@ import classNames from "classnames/bind";
 import "@fortawesome/fontawesome-free/css/all.min.css";
 
 import { useConfig } from "~/Contexts/ConfigContext";
-import styles from "./ChatManager.module.scss";
 import CTVList from "~/Components/CTVList/CTVList";
 import { ArrowBack, Menu } from "@mui/icons-material";
 import { Box, Button, Drawer, IconButton } from "@mui/material";
+
+import styles from "./ChatManager.module.scss"
 
 const cx = classNames.bind(styles);
 
@@ -565,8 +566,8 @@ function ChatManager() {
                                 </span>
                               </div>
                             </div>
-                            <div className={cx("chat-header-right")}>
                               <i className="fas fa-info-circle"></i>
+                            <div className={cx("chat-header-right")}>
                               <i
                                 className="fas fa-times"
                                 onClick={() => closeChat(chat.id)}

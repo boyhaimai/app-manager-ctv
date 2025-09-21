@@ -13,7 +13,6 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
-  Input,
   Snackbar,
 } from "@mui/material";
 
@@ -26,8 +25,8 @@ const cx = classNames.bind(styles);
 
 const urlRegister = "https://wf.mkt04.vawayai.com/webhook/register_msg";
 const urlLogin = "https://wf.mkt04.vawayai.com/webhook/login_msg";
-const urlCheckExistToken =
-  "https://wf.mkt04.vawayai.com/webhook-test/check_exist_toekn";
+// const urlCheckExistToken =
+//   "https://wf.mkt04.vawayai.com/webhook-test/check_exist_toekn";
 
 function TabPanel(props) {
   const { children, value, index, ...other } = props;
@@ -74,6 +73,10 @@ function Login() {
     title: "",
     message: "",
   });
+  let cipher = password;
+  for (let i = 0; i < 12; i++) {
+    cipher = btoa(cipher); // encode 6 lần
+  }
 
   // useEffect(() => {
   //   const token = localStorage.getItem("token");
@@ -161,7 +164,10 @@ function Login() {
           "Content-Type": "application/json",
           Authorization: "Basic " + btoa("boyhaimais:bangdz202"),
         },
-        body: JSON.stringify({ phone, password }),
+        body: JSON.stringify({
+          phone,
+          encryptedPassword: cipher,
+        }),
       });
 
       const text = await res.text();
@@ -280,7 +286,11 @@ function Login() {
           "Content-Type": "application/json",
           Authorization: "Basic " + btoa("boyhaimais:bangdz202"),
         },
-        body: JSON.stringify({ name, phone, password }), // 👈 gửi thêm name
+        body: JSON.stringify({
+          name,
+          phone,
+          encryptedPassword: cipher,
+        }),
       });
 
       const text = await res.text();
@@ -419,7 +429,10 @@ function Login() {
                 checked={rememberMe}
                 onChange={(e) => setRememberMe(e.target.checked)}
               />
-              <label htmlFor="rememberMe" style={{ marginLeft: "6px", fontSize: "18px" }}>  
+              <label
+                htmlFor="rememberMe"
+                style={{ marginLeft: "6px", fontSize: "18px" }}
+              >
                 Nhớ mật khẩu
               </label>
             </div>
