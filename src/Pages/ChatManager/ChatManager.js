@@ -104,12 +104,25 @@ function ChatManager() {
   }, [searchTerm]);
 
   // Reset và load lần đầu khi đổi CTV
+  // Reset và load lần đầu khi đổi CTV
   useEffect(() => {
     if (!ctvId) return;
+
+    // Clear popup, chat cũ
+    setOpenChats([]);
+    setActiveChat(null);
+    setMessages({});
+    setNewMessage({});
+    setMsgPage({});
+    setMsgHasMore({}); // ✅ reset trạng thái còn tin nhắn không
+    localStorage.removeItem("openChats");
+    localStorage.removeItem("activeChat");
+
+    // Reset danh sách hội thoại
     setCustomerList([]);
     setPage(0);
     setHasMore(true);
-    // gọi lần đầu
+
     loadConversations(ctvId, 0);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ctvId, config]);
@@ -183,23 +196,30 @@ function ChatManager() {
   // Load thêm tin nhắn khi msgPage thay đổi
   useEffect(() => {
     if (!activeChat || msgPage[activeChat] === undefined) return;
+    // if (msgPage[activeChat] === 0) return;
 
     const fetchMore = async () => {
       const list = await loadMessages(ctvId, activeChat, msgPage[activeChat]);
-
       const mapped = list.map((m, index) => ({
         id: m.id || `${msgPage[activeChat]}-${index}`,
-        text: m.content,
-        sender: m.is_selt === "true" ? "me" : "other",
+        text: m.content, // ✅ đồng bộ với query
+        sender: m.is_self === true || m.is_self === "true" ? "me" : "other",
         time: new Date(Number(m.time)).toLocaleString("vi-VN"),
         avatar: m.avatar || "/default-avatar.png",
         isSystemMessage: false,
       }));
 
-      setMessages((prev) => ({
-        ...prev,
-        [activeChat]: [...(prev[activeChat] || []), ...mapped.reverse()],
-      }));
+      setMessages((prev) => {
+        const existing = prev[activeChat] || [];
+        const existingIds = new Set(existing.map((m) => m.id));
+
+        const uniqueNew = mapped.filter((m) => !existingIds.has(m.id));
+
+        return {
+          ...prev,
+          [activeChat]: [...existing, ...uniqueNew], // ✅ append xuống dưới
+        };
+      });
     };
 
     fetchMore();
@@ -208,32 +228,32 @@ function ChatManager() {
 
   const loaderBottomRef = useRef(null);
 
-  useEffect(() => {
-    if (!loaderBottomRef.current || !activeChat) return;
+  // useEffect(() => {
+  //   if (!loaderBottomRef.current || !activeChat) return;
 
-    const scrollContainer = document.querySelector(
-      `.chat-window[data-chat-id="${activeChat}"] .chat-messages`
-    );
+  //   const scrollContainer = document.querySelector(
+  //     `.chat-window[data-chat-id="${activeChat}"] .chat-messages`
+  //   );
 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (
-          entries[0].isIntersecting &&
-          msgHasMore[activeChat] &&
-          !msgLoading
-        ) {
-          setMsgPage((prev) => ({
-            ...prev,
-            [activeChat]: (prev[activeChat] || 0) + 1,
-          }));
-        }
-      },
-      { root: scrollContainer, rootMargin: "0px 0px 50px 0px", threshold: 0.1 }
-    );
+  //   const observer = new IntersectionObserver(
+  //     (entries) => {
+  //       if (
+  //         entries[0].isIntersecting &&
+  //         msgHasMore[activeChat] &&
+  //         !msgLoading
+  //       ) {
+  //         setMsgPage((prev) => ({
+  //           ...prev,
+  //           [activeChat]: (prev[activeChat] || 0) + 1,
+  //         }));
+  //       }
+  //     },
+  //     { root: scrollContainer, rootMargin: "0px 0px 50px 0px", threshold: 0.1 }
+  //   );
 
-    observer.observe(loaderBottomRef.current);
-    return () => observer.disconnect();
-  }, [activeChat, msgHasMore, msgLoading]);
+  //   observer.observe(loaderBottomRef.current);
+  //   return () => observer.disconnect();
+  // }, [activeChat, msgHasMore, msgLoading, messages]);
 
   // Lọc danh sách hội thoại theo từ khóa tìm kiếm
   const filteredConversations = customerList
@@ -266,12 +286,17 @@ function ChatManager() {
     setMsgPage((prev) => ({ ...prev, [conversation.id]: 0 }));
     setMsgHasMore((prev) => ({ ...prev, [conversation.id]: true }));
 
-    const msgs = await getMessages(conversation.id_nick_zalo, conversation.id);
+    // Trong openChat
+    const msgs = await getMessages(ctvId, conversation.id);
+
+    if (msgs.length < limit) {
+      setMsgHasMore((prev) => ({ ...prev, [conversation.id]: false }));
+    }
 
     const mapped = msgs.map((m, index) => ({
-      id: m.id || index,
+      id: m.id || `${m.time}-${index}`,
       text: m.content,
-      sender: m.is_selt === "true" ? "me" : "other",
+      sender: m.is_self ? "me" : "other",
       time: new Date(Number(m.time)).toLocaleString("vi-VN"),
       avatar: m.avatar || "/default-avatar.png",
       isSystemMessage: false,
@@ -279,7 +304,7 @@ function ChatManager() {
 
     setMessages((prev) => ({
       ...prev,
-      [conversation.id]: mapped.reverse(),
+      [conversation.id]: mapped, // dữ liệu đã ASC, set thẳng
     }));
 
     setTimeout(() => {
@@ -463,7 +488,7 @@ function ChatManager() {
                       ))}
                     </div>
                     {/* loader */}
-                    {hasMore ? (
+                    {hasMore && (
                       <div style={{ textAlign: "center", padding: 10 }}>
                         <button
                           onClick={() => setPage((prev) => prev + 1)}
@@ -481,16 +506,6 @@ function ChatManager() {
                           {isLoading ? "Đang tải..." : "Xem thêm"}
                         </button>
                       </div>
-                    ) : (
-                      <p
-                        style={{
-                          textAlign: "center",
-                          fontSize: "18px",
-                          marginBottom: 20,
-                        }}
-                      >
-                        Hết danh sách
-                      </p>
                     )}
                   </div>
                 )}
@@ -625,6 +640,32 @@ function ChatManager() {
                                 )}
                               </div>
                             ))}
+                            {msgHasMore[chat.id] && (
+                              <div style={{ textAlign: "center", padding: 10 }}>
+                                <button
+                                  onClick={() =>
+                                    setMsgPage((prev) => ({
+                                      ...prev,
+                                      [chat.id]: (prev[chat.id] || 0) + 1,
+                                    }))
+                                  }
+                                  disabled={msgLoading}
+                                  style={{
+                                    padding: "6px 14px",
+                                    borderRadius: "6px",
+                                    border: "1px solid #764ba2",
+                                    background: "#764ba2",
+                                    color: "#fff",
+                                    cursor: "pointer",
+                                    marginTop: 10,
+                                  }}
+                                >
+                                  {msgLoading && activeChat === chat.id
+                                    ? "Đang tải..."
+                                    : "Xem thêm tin nhắn"}
+                                </button>
+                              </div>
+                            )}
                           </div>
 
                           {/* Chat Input */}
@@ -794,7 +835,7 @@ function ChatManager() {
                           </div>
                         </div>
                       ))}
-                      {hasMore ? (
+                      {hasMore && (
                         <div style={{ textAlign: "center", padding: 10 }}>
                           <button
                             onClick={() => setPage((prev) => prev + 1)}
@@ -811,11 +852,7 @@ function ChatManager() {
                             {isLoading ? "Đang tải..." : "Xem thêm"}
                           </button>
                         </div>
-                      ) : (
-                        <p style={{ textAlign: "center", fontSize: "18px" }}>
-                          Hết danh sách
-                        </p>
-                      )}
+                      ) }
                     </div>
                   </div>
                 )}
@@ -919,16 +956,28 @@ function ChatManager() {
                             </div>
                           ))}
                           {msgHasMore[chat.id] && (
-                            <div
-                              ref={loaderBottomRef}
-                              style={{
-                                textAlign: "center",
-                                padding: 5,
-                                fontSize: "14px",
-                                color: "#888",
-                              }}
-                            >
-                              {msgLoading ? "Đang tải..." : "Tải thêm tin nhắn"}
+                            <div style={{ textAlign: "center", padding: 10 }}>
+                              <button
+                                onClick={() =>
+                                  setMsgPage((prev) => ({
+                                    ...prev,
+                                    [chat.id]: (prev[chat.id] || 0) + 1,
+                                  }))
+                                }
+                                disabled={msgLoading}
+                                style={{
+                                  padding: "6px 14px",
+                                  borderRadius: "6px",
+                                  border: "1px solid #764ba2",
+                                  background: "#764ba2",
+                                  color: "#fff",
+                                  cursor: "pointer",
+                                }}
+                              >
+                                {msgLoading && activeChat === chat.id
+                                  ? "Đang tải..."
+                                  : "Xem thêm"}
+                              </button>
                             </div>
                           )}
                         </div>

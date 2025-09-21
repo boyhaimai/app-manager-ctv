@@ -107,7 +107,7 @@ function CTVList({ onSelect }) {
           </li>
         ))}
       </ul>
-      {hasMore ? (
+      {hasMore && (
         <div style={{ textAlign: "center", padding: 10 }}>
           <button
             onClick={() => {
@@ -128,8 +128,6 @@ function CTVList({ onSelect }) {
             {isLoading ? "Đang tải..." : "Xem thêm"}
           </button>
         </div>
-      ) : (
-        <p style={{ textAlign: "center", fontSize: "16px" }}>Hết danh sách</p>
       )}
     </div>
   );
