@@ -196,7 +196,7 @@ function ChatManager() {
   // Load thêm tin nhắn khi msgPage thay đổi
   useEffect(() => {
     if (!activeChat || msgPage[activeChat] === undefined) return;
-    // if (msgPage[activeChat] === 0) return;
+    if (msgPage[activeChat] === 0) return;
 
     const fetchMore = async () => {
       const list = await loadMessages(ctvId, activeChat, msgPage[activeChat]);
@@ -225,35 +225,6 @@ function ChatManager() {
     fetchMore();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [msgPage, activeChat, ctvId]);
-
-  const loaderBottomRef = useRef(null);
-
-  // useEffect(() => {
-  //   if (!loaderBottomRef.current || !activeChat) return;
-
-  //   const scrollContainer = document.querySelector(
-  //     `.chat-window[data-chat-id="${activeChat}"] .chat-messages`
-  //   );
-
-  //   const observer = new IntersectionObserver(
-  //     (entries) => {
-  //       if (
-  //         entries[0].isIntersecting &&
-  //         msgHasMore[activeChat] &&
-  //         !msgLoading
-  //       ) {
-  //         setMsgPage((prev) => ({
-  //           ...prev,
-  //           [activeChat]: (prev[activeChat] || 0) + 1,
-  //         }));
-  //       }
-  //     },
-  //     { root: scrollContainer, rootMargin: "0px 0px 50px 0px", threshold: 0.1 }
-  //   );
-
-  //   observer.observe(loaderBottomRef.current);
-  //   return () => observer.disconnect();
-  // }, [activeChat, msgHasMore, msgLoading, messages]);
 
   // Lọc danh sách hội thoại theo từ khóa tìm kiếm
   const filteredConversations = customerList
@@ -378,6 +349,8 @@ function ChatManager() {
     return window.innerWidth <= 768;
   };
 
+  console.log(">>> Render with mobileView =", mobileView);
+
   return (
     <>
       <div className={cx("main-content")}>
@@ -407,7 +380,7 @@ function ChatManager() {
                   >
                     <ArrowBack /> Quay lại CTV
                   </button>
-                  <Button onClick={toggleDrawer(true)}>
+                  <Button onClick={() => setDrawerOpen(true)} type="button">
                     <Menu sx={{ color: "#fff", fontSize: 28 }} />
                   </Button>
                 </div>
@@ -527,9 +500,9 @@ function ChatManager() {
                       >
                         <ArrowBack sx={{ color: "#fff" }} />
                       </Button>
-                      <IconButton onClick={toggleDrawer(true)}>
+                      {/* <IconButton onClick={toggleDrawer(true)}>
                         <Menu sx={{ color: "#fff" }} />
-                      </IconButton>
+                      </IconButton> */}
                     </Box>
                     {/* <button
                       className={cx("back-button")}
@@ -698,20 +671,22 @@ function ChatManager() {
             <Drawer
               anchor="left"
               open={drawerOpen}
-              onClose={toggleDrawer(false)}
+              onClose={() => setDrawerOpen(false)} // 👈 chỉ đóng Drawer
               PaperProps={{
                 sx: {
-                  top: "60px", // 👈 cách top 60px
-                  height: "calc(100% - 60px)", // 👈 còn lại chiếm full chiều cao trừ đi 60px
+                  top: "60px",
+                  height: "calc(100% - 60px)",
                   width: "100%",
                 },
               }}
             >
               <div style={{ width: "100%" }}>
                 <CTVList
-                  onSelect={() => {
+                  onSelect={(selected) => {
                     setDrawerOpen(false);
-                    setMobileView("conversation");
+                    if (selected) {
+                      openChat(selected); // 👈 mở hội thoại
+                    }
                   }}
                 />
               </div>
@@ -852,7 +827,7 @@ function ChatManager() {
                             {isLoading ? "Đang tải..." : "Xem thêm"}
                           </button>
                         </div>
-                      ) }
+                      )}
                     </div>
                   </div>
                 )}
