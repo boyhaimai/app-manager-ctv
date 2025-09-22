@@ -24,7 +24,7 @@ import { Lock, WarningAmber } from "@mui/icons-material";
 const cx = classNames.bind(styles);
 
 const urlRegister = "https://wf.mkt04.vawayai.com/webhook/register_msg";
-const urlLogin = "https://wf.mkt04.vawayai.com/webhook-test/login_msg";
+const urlLogin = "https://wf.mkt04.vawayai.com/webhook/login_msg";
 // const urlCheckExistToken =
 //   "https://wf.mkt04.vawayai.com/webhook-test/check_exist_toekn";
 
@@ -74,6 +74,7 @@ function Login() {
     message: "",
   });
   const [cfToken, setCfToken] = useState("");
+  const [cfTokenRegister, setCfTokenRegister] = useState("");
 
   let cipher = password;
   for (let i = 0; i < 12; i++) {
@@ -98,6 +99,11 @@ function Login() {
       document.body.appendChild(script);
     }
   }, []);
+
+  window.cfCallbackRegister = (token) => {
+    setCfTokenRegister(token);
+    console.log("Turnstile token (register):", token);
+  };
 
   useEffect(() => {
     const savedPhone = localStorage.getItem("savedPhone");
@@ -177,7 +183,6 @@ function Login() {
       const result = Array.isArray(data) ? data[0] : data;
 
       if (result.success === true || result.success === "true") {
-        // ...
         if (rememberMe) {
           localStorage.setItem("savedPhone", phone);
           localStorage.setItem("savedPass", btoa(password)); // mã hóa base64
@@ -234,12 +239,25 @@ function Login() {
           }
         }, 1500);
       } else {
-        // ❌ Trường hợp sai mật khẩu hoặc thất bại
+        // Trường hợp thất bại
+        const isCaptchaError = result.message?.includes("Captcha");
         setSnackbar({
           open: true,
-          message: result.message || "Sai tài khoản hoặc mật khẩu",
+          message:
+            result.message ||
+            (isCaptchaError
+              ? "Captcha không hợp lệ hoặc đã hết hạn. Vui lòng thử lại."
+              : "Sai tài khoản hoặc mật khẩu"),
           severity: "error",
         });
+
+        // Nếu là lỗi Captcha, reset token để user tick lại
+        if (isCaptchaError) {
+          setCfToken(""); // xóa token cũ
+          if (window.turnstile) {
+            window.turnstile.reset(); // reset Turnstile
+          }
+        }
       }
     } catch (error) {
       setIsLoading(false);
@@ -263,7 +281,7 @@ function Login() {
         message: "Vui lòng nhập đầy đủ tất cả các trường đăng ký.",
         severity: "error",
       });
-      return; // ⛔ Không post
+      return;
     }
 
     if (password.length < 6) {
@@ -284,6 +302,15 @@ function Login() {
       return;
     }
 
+    if (!cfTokenRegister) {
+      setSnackbar({
+        open: true,
+        message: "Vui lòng xác thực Captcha trước khi đăng ký.",
+        severity: "error",
+      });
+      return;
+    }
+
     setIsLoading(true);
 
     try {
@@ -297,6 +324,7 @@ function Login() {
           name,
           phone,
           encryptedPassword: cipher,
+          cf_token: cfTokenRegister, // gửi token Captcha
         }),
       });
 
@@ -313,7 +341,7 @@ function Login() {
 
       const result = Array.isArray(data) ? data[0] : data;
 
-      if (result.success === "true") {
+      if (result.success === "true" || result.success === true) {
         setSnackbar({
           open: true,
           message: result.message || "Đăng ký thành công! Vui lòng đăng nhập.",
@@ -322,11 +350,25 @@ function Login() {
         setValue(0);
         setTimeout(() => navigate("/"), 1500);
       } else {
+        // kiểm tra lỗi captcha
+        const isCaptchaError = result.message?.includes("Captcha");
+
         setSnackbar({
           open: true,
-          message: result.message || "Đăng ký thất bại. Vui lòng thử lại.",
+          message:
+            result.message ||
+            (isCaptchaError
+              ? "Captcha không hợp lệ hoặc đã hết hạn. Vui lòng thử lại."
+              : "Đăng ký thất bại. Vui lòng thử lại."),
           severity: "error",
         });
+
+        if (isCaptchaError) {
+          setCfTokenRegister(""); // xóa token cũ
+          if (window.turnstile) {
+            window.turnstile.reset(); // reset Turnstile
+          }
+        }
       }
     } catch (error) {
       setIsLoading(false);
@@ -559,6 +601,12 @@ function Login() {
                 </IconButton>
               </div>
             </div>
+
+            <div
+              className="cf-turnstile"
+              data-sitekey="0x4AAAAAAB2ihgOXExfs5zoP"
+              data-callback="cfCallbackRegister"
+            ></div>
 
             {registerError && <p className={styles.error}>{registerError}</p>}
 
