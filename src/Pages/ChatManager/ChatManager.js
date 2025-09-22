@@ -6,7 +6,7 @@ import "@fortawesome/fontawesome-free/css/all.min.css";
 import { useConfig } from "~/Contexts/ConfigContext";
 import CTVList from "~/Components/CTVList/CTVList";
 import { ArrowBack, Menu } from "@mui/icons-material";
-import { Box, Button, Drawer, IconButton } from "@mui/material";
+import { Box, Button, Dialog, Drawer, IconButton } from "@mui/material";
 
 import styles from "./ChatManager.module.scss";
 
@@ -37,8 +37,44 @@ function ChatManager() {
 
   const limit = 20;
 
-  const toggleDrawer = (open) => () => {
-    setDrawerOpen(open);
+  // --- Thêm helper function ở đầu component (ví dụ ngay sau const limit = 20;)
+  const scrollDialogToChat = (chatId, smooth = true) => {
+    const chatDialog = document.querySelector("[data-chat-dialog]");
+    const chatWindow = document.querySelector(`[data-chat-id="${chatId}"]`);
+
+    if (!chatDialog || !chatWindow) return false;
+
+    const dialogRect = chatDialog.getBoundingClientRect();
+    const winRect = chatWindow.getBoundingClientRect();
+
+    // tính top tương đối trong container có cuộn
+    const top = winRect.top - dialogRect.top + chatDialog.scrollTop;
+
+    chatDialog.scrollTo({
+      top,
+      behavior: smooth ? "smooth" : "auto",
+    });
+
+    return true;
+  };
+
+  const scrollDesktopToChat = (chatId, smooth = true) => {
+    const chatWindows = document.querySelector(`.${cx("chat-windows")}`);
+    const chatWindow = document.querySelector(`[data-chat-id="${chatId}"]`);
+
+    if (!chatWindows || !chatWindow) return false;
+
+    const parentRect = chatWindows.getBoundingClientRect();
+    const winRect = chatWindow.getBoundingClientRect();
+
+    const top = winRect.top - parentRect.top + chatWindows.scrollTop;
+
+    chatWindows.scrollTo({
+      top,
+      behavior: smooth ? "smooth" : "auto",
+    });
+
+    return true;
   };
 
   const loadConversations = async (ctvId, pageNum) => {
@@ -241,17 +277,12 @@ function ChatManager() {
 
       // 👇 Sau khi render xong, scroll tới popup mới
       setTimeout(() => {
-        const chatWindow = document.querySelector(
-          `.chat-window[data-chat-id="${conversation.id}"]`
-        );
-        if (chatWindow) {
-          chatWindow.scrollIntoView({
-            behavior: "smooth",
-            block: "nearest",
-            inline: "center",
-          });
+        if (isMobile()) {
+          scrollDialogToChat(conversation.id, true);
+        } else {
+          scrollDesktopToChat(conversation.id, true);
         }
-      }, 200);
+      }, 80);
     }
 
     setActiveChat(conversation.id);
@@ -350,7 +381,28 @@ function ChatManager() {
     return window.innerWidth <= 768;
   };
 
-  console.log(">>> Render with mobileView =", mobileView);
+  useEffect(() => {
+    if (mobileView === "chat" && activeChat) {
+      // gọi nhiều lần ở các mốc nhỏ để chắc chắn DOM đã có element
+      const timeouts = [0, 50, 120, 300].map((delay) =>
+        setTimeout(() => {
+          scrollDialogToChat(activeChat, true);
+        }, delay)
+      );
+      return () => timeouts.forEach(clearTimeout);
+    }
+  }, [mobileView, activeChat, openChats]);
+
+  useEffect(() => {
+    if (!isMobile() && activeChat) {
+      const timeouts = [0, 80, 150].map((delay) =>
+        setTimeout(() => {
+          scrollDesktopToChat(activeChat, true);
+        }, delay)
+      );
+      return () => timeouts.forEach(clearTimeout);
+    }
+  }, [activeChat, openChats]);
 
   return (
     <>
@@ -372,7 +424,7 @@ function ChatManager() {
               </div>
             )}
 
-            {mobileView === "conversation" && (
+            {(mobileView === "conversation" || mobileView === "chat") && (
               <div className={cx("mobile-conversation")}>
                 <div className={cx("wrapper-header-mobile")}>
                   <button
@@ -462,7 +514,10 @@ function ChatManager() {
                       ))}
                       {/* loader */}
                       {hasMore && (
-                        <div style={{ textAlign: "center" }} className={cx("loader_mobile")}>
+                        <div
+                          style={{ textAlign: "center" }}
+                          className={cx("loader_mobile")}
+                        >
                           <button
                             onClick={() => setPage((prev) => prev + 1)}
                             disabled={isLoading}
@@ -486,189 +541,116 @@ function ChatManager() {
               </div>
             )}
 
-            {mobileView === "chat" && activeChat && (
-              <div className={cx("mobile-chat")}>
-                <div className={cx("header", "mobile-header")}>
-                  <div className={cx("header-left")}>
-                    <Box sx={{ display: "flex", alignItems: "left" }}>
-                      <Button
-                        className={cx("back-button")}
-                        onClick={() => setMobileView("conversation")}
-                        variant="contained"
-                        sx={{
-                          backgroundColor: "#764ba2",
-                        }}
-                      >
-                        <ArrowBack sx={{ color: "#fff" }} />
-                      </Button>
-                      {/* <IconButton onClick={toggleDrawer(true)}>
-                        <Menu sx={{ color: "#fff" }} />
-                      </IconButton> */}
-                    </Box>
-                    {/* <button
-                      className={cx("back-button")}
-                      onClick={() => navigate("/manager-page")}
-                    >
-                      <ArrowBack fontSize="small" />
-                      Quay lại trang quan lý
-                    </button> */}
-                    {/* <button
-                      className={cx("back-button")}
-                      onClick={() => {
-                        // Clear hết popup đã chọn
-                        setOpenChats([]);
-                        setActiveChat(null);
-                        setMessages({});
-                        setNewMessage({});
-                        // Clear localStorage
-                        localStorage.removeItem("openChats");
-                        localStorage.removeItem("activeChat");
+            <Dialog
+              open={mobileView === "chat" && openChats.length > 0}
+              onClose={() => setMobileView("conversation")}
+              disablePortal
+              fullWidth
+              PaperProps={{
+                sx: {
+                  margin: 0,
+                  marginTop: "60px", // cách header 60px
+                  height: "calc(100% - 15px)",
+                  borderRadius: "12px 12px 0 0",
+                  overflow: "hidden",
+                  width: "100%",
+                },
+              }}
+            >
+              <div
+                className={cx("chat-dialog")}
+                data-chat-dialog
+                style={{
+                  height: "100%",
+                  overflowY: "auto",
+                  boxSizing: "border-box",
+                }}
+              >
+                {openChats.map((chat) => (
+                  <div
+                    key={chat.id}
+                    className={cx("chat-window", "chat-mobile")}
+                    data-chat-id={chat.id}
+                  >
+                    {/* Chat Header */}
+                    <div className={cx("chat-header")}>
+                      <div className={cx("chat-header-left")}>
+                        <img src={chat.avatar} alt={chat.name} />
+                        <div className={cx("chat-info")}>
+                          <span className={cx("chat-name")}>{chat.name}</span>
+                        </div>
+                      </div>
+                      <div className={cx("chat-header-right")}>
+                        <i className="fas fa-info-circle"></i>
+                        <i
+                          className="fas fa-times"
+                          onClick={() => closeChat(chat.id)}
+                        ></i>
+                      </div>
+                    </div>
 
-                        // 👇 Thêm dòng này để tránh trắng màn
-                        if (isMobile()) {
-                          setMobileView("conversation");
-                        }
-                      }}
-                    >
-                      <i className="fas fa-times-circle"></i>
-                      Đóng tất cả popup
-                    </button> */}
-                  </div>
-                  <div className={cx("header-right")}></div>
-                </div>
-                {openChats
-                  .filter((c) => c.id === activeChat)
-                  .map((chat) => (
-                    <div
-                      key={chat.id}
-                      className={cx("chat-window", "chat-mobile")}
-                    >
-                      <div
-                        className={cx("chat-windows", {
-                          scrollable: needsScrolling(),
-                          "mobile-layout": isMobile(),
-                          "desktop-layout": !isMobile(),
-                        })}
-                      >
+                    {/* Chat Messages */}
+                    <div className={cx("chat-messages")}>
+                      {messages[chat.id]?.map((message) => (
                         <div
-                          className={cx("chat-window", {
-                            active: activeChat === chat.id,
+                          key={message.id}
+                          className={cx("message", {
+                            "message-me": message.sender === "me",
+                            "message-other": message.sender === "other",
+                            "message-system": message.sender === "system",
                           })}
-                          data-chat-id={chat.id}
                         >
-                          {/* Chat Header */}
-                          <div className={cx("chat-header")}>
-                            <div className={cx("chat-header-left")}>
-                              <img src={chat.avatar} alt={chat.name} />
-                              <div className={cx("chat-info")}>
-                                <span className={cx("chat-name")}>
-                                  {chat.name}
-                                </span>
+                          {message.sender === "other" && (
+                            <img
+                              src={message.avatar}
+                              alt="Avatar"
+                              className={cx("message-avatar")}
+                            />
+                          )}
+                          <div className={cx("message-content")}>
+                            {message.isSystemMessage ? (
+                              <div className={cx("system-message")}>
+                                {message.text}
                               </div>
-                            </div>
-                            <i className="fas fa-info-circle"></i>
-                            <div className={cx("chat-header-right")}>
-                              <i
-                                className="fas fa-times"
-                                onClick={() => closeChat(chat.id)}
-                              ></i>
-                            </div>
-                          </div>
-
-                          {/* Chat Messages */}
-                          <div className={cx("chat-messages")}>
-                            {messages[chat.id]?.map((message) => (
-                              <div
-                                key={message.id}
-                                className={cx("message", {
-                                  "message-me": message.sender === "me",
-                                  "message-other": message.sender === "other",
-                                  "message-system": message.sender === "system",
-                                })}
-                              >
-                                {message.sender === "other" && (
-                                  <img
-                                    src={message.avatar}
-                                    alt="Avatar"
-                                    className={cx("message-avatar")}
-                                  />
-                                )}
-                                <div className={cx("message-content")}>
-                                  {message.isSystemMessage ? (
-                                    <div className={cx("system-message")}>
-                                      {message.text}
-                                    </div>
-                                  ) : (
-                                    <div className={cx("message-bubble")}>
-                                      {message.text}
-                                    </div>
-                                  )}
-                                  <div className={cx("message-time")}>
-                                    {message.time}
-                                  </div>
-                                </div>
-                                {message.sender === "me" && (
-                                  <div className={cx("message-status")}>
-                                    <i className="fas fa-check"></i>
-                                  </div>
-                                )}
-                              </div>
-                            ))}
-                            {msgHasMore[chat.id] && (
-                              <div style={{ textAlign: "center", padding: 10 }}>
-                                <button
-                                  onClick={() =>
-                                    setMsgPage((prev) => ({
-                                      ...prev,
-                                      [chat.id]: (prev[chat.id] || 0) + 1,
-                                    }))
-                                  }
-                                  disabled={msgLoading}
-                                  style={{
-                                    padding: "6px 14px",
-                                    borderRadius: "6px",
-                                    border: "1px solid #764ba2",
-                                    background: "#764ba2",
-                                    color: "#fff",
-                                    cursor: "pointer",
-                                    marginTop: 10,
-                                  }}
-                                >
-                                  {msgLoading && activeChat === chat.id
-                                    ? "Đang tải..."
-                                    : "Xem thêm tin nhắn"}
-                                </button>
+                            ) : (
+                              <div className={cx("message-bubble")}>
+                                {message.text}
                               </div>
                             )}
-                          </div>
-
-                          {/* Chat Input */}
-                          <div className={cx("chat-input")}>
-                            <div className={cx("input-container")}>
-                              <i className="fas fa-paperclip"></i>
-                              <i className="fas fa-image"></i>
-                              <i className="fas fa-smile"></i>
-                              <i className="fas fa-bolt"></i>
-                              <input
-                                type="text"
-                                placeholder="Nhập tin nhắn..."
-                                value={newMessage[chat.id] || ""}
-                                onChange={(e) =>
-                                  setNewMessage({
-                                    ...newMessage,
-                                    [chat.id]: e.target.value,
-                                  })
-                                }
-                              />
-                              <i className="fas fa-paper-plane"></i>
+                            <div className={cx("message-time")}>
+                              {message.time}
                             </div>
                           </div>
                         </div>
+                      ))}
+                    </div>
+
+                    {/* Chat Input */}
+                    <div className={cx("chat-input")}>
+                      <div className={cx("input-container")}>
+                        <i className="fas fa-paperclip"></i>
+                        <i className="fas fa-image"></i>
+                        <i className="fas fa-smile"></i>
+                        <i className="fas fa-bolt"></i>
+                        <input
+                          type="text"
+                          placeholder="Nhập tin nhắn..."
+                          value={newMessage[chat.id] || ""}
+                          onChange={(e) =>
+                            setNewMessage({
+                              ...newMessage,
+                              [chat.id]: e.target.value,
+                            })
+                          }
+                        />
+                        <i className="fas fa-paper-plane"></i>
                       </div>
                     </div>
-                  ))}
+                  </div>
+                ))}
               </div>
-            )}
+            </Dialog>
+
             <Drawer
               anchor="left"
               open={drawerOpen}
