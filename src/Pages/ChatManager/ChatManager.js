@@ -8,7 +8,7 @@ import CTVList from "~/Components/CTVList/CTVList";
 import { ArrowBack, Menu } from "@mui/icons-material";
 import { Box, Button, Drawer, IconButton } from "@mui/material";
 
-import styles from "./ChatManager.module.scss"
+import styles from "./ChatManager.module.scss";
 
 const cx = classNames.bind(styles);
 
@@ -460,27 +460,27 @@ function ChatManager() {
                           </div>
                         </div>
                       ))}
+                      {/* loader */}
+                      {hasMore && (
+                        <div style={{ textAlign: "center" }} className={cx("loader_mobile")}>
+                          <button
+                            onClick={() => setPage((prev) => prev + 1)}
+                            disabled={isLoading}
+                            style={{
+                              padding: "8px 16px",
+                              borderRadius: "6px",
+                              border: "1px solid #764ba2",
+                              background: "#764ba2",
+                              color: "#fff",
+                              cursor: "pointer",
+                              marginBottom: 20,
+                            }}
+                          >
+                            {isLoading ? "Đang tải..." : "Xem thêm"}
+                          </button>
+                        </div>
+                      )}
                     </div>
-                    {/* loader */}
-                    {hasMore && (
-                      <div style={{ textAlign: "center", padding: 10 }}>
-                        <button
-                          onClick={() => setPage((prev) => prev + 1)}
-                          disabled={isLoading}
-                          style={{
-                            padding: "8px 16px",
-                            borderRadius: "6px",
-                            border: "1px solid #764ba2",
-                            background: "#764ba2",
-                            color: "#fff",
-                            cursor: "pointer",
-                            marginBottom: 20,
-                          }}
-                        >
-                          {isLoading ? "Đang tải..." : "Xem thêm"}
-                        </button>
-                      </div>
-                    )}
                   </div>
                 )}
               </div>
@@ -566,7 +566,7 @@ function ChatManager() {
                                 </span>
                               </div>
                             </div>
-                              <i className="fas fa-info-circle"></i>
+                            <i className="fas fa-info-circle"></i>
                             <div className={cx("chat-header-right")}>
                               <i
                                 className="fas fa-times"

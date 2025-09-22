@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   BottomNavigation,
   BottomNavigationAction,
@@ -11,8 +11,9 @@ import {
   SettingsRounded,
   ErrorRounded,
   Logout,
+  AdminPanelSettings,
 } from "@mui/icons-material";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 
 import styles from "./MobileBottomBar.module.scss";
 import classNames from "classnames/bind";
@@ -21,9 +22,23 @@ const cx = classNames.bind(styles);
 
 function MobileBottomBar() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [value, setValue] = useState(0);
   const [anchorEl, setAnchorEl] = useState(null);
   const open = Boolean(anchorEl);
+  const role = parseInt(localStorage.getItem("role"), 10);
+
+  useEffect(() => {
+    if (location.pathname.startsWith("/manager-page")) {
+      setValue(0);
+    } else if (role === 0 && location.pathname.startsWith("/admin")) {
+      setValue(1);
+    } else if (location.pathname.startsWith("/profile")) {
+      setValue(role === 0 ? 2 : 1); // nếu có admin thì profile là index 2, ko thì 1
+    } else {
+      setValue(-1); // không match cái nào
+    }
+  }, [location.pathname, role]);
 
   const handleAvatarClick = (event) => setAnchorEl(event.currentTarget);
   const handleClose = () => setAnchorEl(null);
@@ -53,6 +68,13 @@ function MobileBottomBar() {
           icon={<Dashboard fontSize="small" />}
           onClick={() => navigate("/manager-page")}
         />
+        {role === 0 && (
+          <BottomNavigationAction
+            label=""
+            icon={<AdminPanelSettings fontSize="small" />}
+            onClick={() => navigate("/admin")}
+          />
+        )}
         <BottomNavigationAction
           label=""
           icon={<SettingsRounded fontSize="small" />}

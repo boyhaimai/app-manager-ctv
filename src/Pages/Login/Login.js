@@ -24,7 +24,7 @@ import { Lock, WarningAmber } from "@mui/icons-material";
 const cx = classNames.bind(styles);
 
 const urlRegister = "https://wf.mkt04.vawayai.com/webhook/register_msg";
-const urlLogin = "https://wf.mkt04.vawayai.com/webhook/login_msg";
+const urlLogin = "https://wf.mkt04.vawayai.com/webhook-test/login_msg";
 // const urlCheckExistToken =
 //   "https://wf.mkt04.vawayai.com/webhook-test/check_exist_toekn";
 
@@ -73,43 +73,31 @@ function Login() {
     title: "",
     message: "",
   });
+  const [cfToken, setCfToken] = useState("");
+
   let cipher = password;
   for (let i = 0; i < 12; i++) {
+    // for (let i = 0; i < 36; i++) {
     cipher = btoa(cipher); // encode 6 lần
   }
 
-  // useEffect(() => {
-  //   const token = localStorage.getItem("token");
-  //   const role = localStorage.getItem("role");
+  useEffect(() => {
+    // gắn callback vào window để Turnstile gọi được
+    window.cfCallback = (token) => {
+      setCfToken(token);
+      console.log("Turnstile token:", token);
+    };
 
-  //   if (token) {
-  //     // Nếu muốn check token với server thì gọi API ở đây
-  //     fetch(urlCheckExistToken, {
-  //       method: "POST",
-  //       headers: {
-  //         "Content-Type": "application/json",
-  //         Authorization: `Bearer ${token}`,
-  //       },
-  //     })
-  //       .then((res) => res.json())
-  //       .then((data) => {
-  //         if (data.success) {
-  //           if (parseInt(role) === 0) {
-  //             navigate("/admin");
-  //           } else if (parseInt(role) === 1) {
-  //             navigate("/manager-page");
-  //           } else {
-  //             navigate("/");
-  //           }
-  //         } else {
-  //           localStorage.clear(); // token sai thì xóa
-  //         }
-  //       })
-  //       .catch(() => {
-  //         localStorage.clear();
-  //       });
-  //   }
-  // }, [navigate]);
+    // nạp script Turnstile nếu chưa có
+    if (!document.querySelector("#cf-turnstile-script")) {
+      const script = document.createElement("script");
+      script.src = "https://challenges.cloudflare.com/turnstile/v0/api.js";
+      script.async = true;
+      script.defer = true;
+      script.id = "cf-turnstile-script";
+      document.body.appendChild(script);
+    }
+  }, []);
 
   useEffect(() => {
     const savedPhone = localStorage.getItem("savedPhone");
@@ -151,8 +139,12 @@ function Login() {
     setLoginError("");
 
     if (!phone.trim() || !password.trim()) {
-      setLoginError("Vui lòng nhập đầy đủ số điện thoại và mật khẩu.");
-      return;
+      setSnackbar({
+        open: true,
+        message: "Vui lòng nhập đầy đủ số điện thoại và mật khẩu.",
+        severity: "error",
+      });
+      return; // ⛔ Không post
     }
 
     setIsLoading(true);
@@ -167,6 +159,7 @@ function Login() {
         body: JSON.stringify({
           phone,
           encryptedPassword: cipher,
+          cf_token: cfToken,
         }),
       });
 
@@ -265,15 +258,29 @@ function Login() {
       !password.trim() ||
       !confirmPassword.trim()
     ) {
-      setRegisterError("Vui lòng nhập đầy đủ thông tin đăng ký.");
-      return;
+      setSnackbar({
+        open: true,
+        message: "Vui lòng nhập đầy đủ tất cả các trường đăng ký.",
+        severity: "error",
+      });
+      return; // ⛔ Không post
     }
+
     if (password.length < 6) {
-      setRegisterError("Mật khẩu phải có ít nhất 6 ký tự.");
+      setSnackbar({
+        open: true,
+        message: "Mật khẩu phải có ít nhất 6 ký tự.",
+        severity: "error",
+      });
       return;
     }
+
     if (password !== confirmPassword) {
-      setRegisterError("Mật khẩu xác nhận không khớp.");
+      setSnackbar({
+        open: true,
+        message: "Mật khẩu xác nhận không khớp.",
+        severity: "error",
+      });
       return;
     }
 
@@ -412,6 +419,12 @@ function Login() {
                 </IconButton>
               </div>
             </div>
+
+            <div
+              className="cf-turnstile"
+              data-sitekey="0x4AAAAAAB2ihgOXExfs5zoP"
+              data-callback="cfCallback"
+            ></div>
 
             {loginError && <p className={styles.error}>{loginError}</p>}
 

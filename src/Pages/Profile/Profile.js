@@ -375,7 +375,7 @@ function Profile() {
             textTransform: "none",
             px: 3,
             py: 1,
-            "&:hover": { bgcolor: "#1e293b" },
+            "&:hover": { bgcolor: "#1e293b", color: "#fff" },
             borderRadius: "8px",
             fontWeight: "bold",
           }}

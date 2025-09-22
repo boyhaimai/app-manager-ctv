@@ -459,7 +459,7 @@ const AdminDashboard = () => {
           Admin Dashboard
         </Typography>
       </Box>
-      <div style={{ minHeight: "100vh", padding: "24px", marginTop: "50px" }}>
+      <div style={{ minHeight: "100vh", padding: "24px", marginTop: "50px" }} className={cx("container")}>
         <div style={{ width: "100%" }}>
           {/* Header */}
           <div
@@ -556,7 +556,8 @@ const AdminDashboard = () => {
                 marginTop: "24px",
                 display: "flex",
                 flexDirection: "column",
-                height: "70vh",
+                height: "auto",
+                marginBottom: "100px",
               }}
             >
               <Box
@@ -565,6 +566,8 @@ const AdminDashboard = () => {
                   justifyContent: "space-between",
                   alignItems: "center",
                   mb: 2,
+                  flexDirection: { xs: "column", sm: "row" }, // 👈 mobile xuống dòng
+                  gap: { xs: 2, sm: 0 }, // thêm khoảng cách khi column
                 }}
               >
                 <CardHeader
@@ -585,6 +588,7 @@ const AdminDashboard = () => {
                   }}
                 >
                   <TextField
+                    className={cx("search_input")}
                     size="small"
                     variant="outlined"
                     placeholder="Tìm kiếm..."
@@ -894,7 +898,7 @@ const AdminDashboard = () => {
                         textTransform: "none",
                       }}
                     >
-                      <ChevronLeft sx={{ fontSize: 32 }}/>
+                      <ChevronLeft sx={{ fontSize: 32 }} />
                     </Button>
 
                     {Array.from({
@@ -925,7 +929,7 @@ const AdminDashboard = () => {
                         textTransform: "none",
                       }}
                     >
-                      <ChevronRight sx={{ fontSize: 32 }}/>
+                      <ChevronRight sx={{ fontSize: 32 }} />
                     </Button>
                   </Box>
                 </Box>

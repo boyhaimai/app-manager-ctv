@@ -91,13 +91,11 @@ function Sidebar() {
             icon={<Dashboard className={cx("icon_menu")} />}
           />
           {role === 0 && (
-            <MenuCustom>
-              <MenuItemCustom
-                title="Dashboard Admin"
-                to={config.routes.admin}
-                icon={<AdminPanelSettings className={cx("icon_menu")} />}
-              />
-            </MenuCustom>
+            <MenuItemCustom
+              title="Dashboard Admin"
+              to={config.routes.admin}
+              icon={<AdminPanelSettings className={cx("icon_menu")} />}
+            />
           )}
 
           <Box className={cx("support")}>

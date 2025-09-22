@@ -929,7 +929,7 @@ function ManagePage() {
               backgroundColor: "#f5f5f5",
               p: 2,
               borderRadius: 2,
-              mb: 3,
+              mb: 10,
               boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
             }}
           >

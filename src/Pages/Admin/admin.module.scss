@@ -66,6 +66,9 @@
 .item_table{
   font-size: 17px !important;
 }
+.container{
+  
+}
 @media (max-width: 768px) {
   .wrapper {
     width: 100%;
@@ -75,5 +78,8 @@
     width: 100%;
     left: 0px;
     top: 0;
+  }
+  .search_input{
+    width: 215px !important;
   }
 }
