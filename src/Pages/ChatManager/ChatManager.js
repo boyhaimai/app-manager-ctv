@@ -462,13 +462,6 @@ function ChatManager() {
                       />
                     </div>
 
-                    <div className={cx("status-filter")}>
-                      <span className={cx("status-item", "active")}>
-                        <i className="fas fa-circle"></i>
-                        Đã kết nối
-                      </span>
-                    </div>
-
                     <div className={cx("conversation-list")}>
                       {filteredConversations.map((conversation) => (
                         <div
@@ -528,7 +521,7 @@ function ChatManager() {
                               background: "#764ba2",
                               color: "#fff",
                               cursor: "pointer",
-                              marginBottom: 20,
+                              marginBottom: 65,
                             }}
                           >
                             {isLoading ? "Đang tải..." : "Xem thêm"}
@@ -623,6 +616,31 @@ function ChatManager() {
                           </div>
                         </div>
                       ))}
+                      {msgHasMore[chat.id] && (
+                        <div style={{ textAlign: "center", padding: 10 }}>
+                          <button
+                            onClick={() =>
+                              setMsgPage((prev) => ({
+                                ...prev,
+                                [chat.id]: (prev[chat.id] || 0) + 1,
+                              }))
+                            }
+                            disabled={msgLoading}
+                            style={{
+                              padding: "6px 14px",
+                              borderRadius: "6px",
+                              border: "1px solid #764ba2",
+                              background: "#764ba2",
+                              color: "#fff",
+                              cursor: "pointer",
+                            }}
+                          >
+                            {msgLoading && activeChat === chat.id
+                              ? "Đang tải..."
+                              : "Xem thêm"}
+                          </button>
+                        </div>
+                      )}
                     </div>
 
                     {/* Chat Input */}
