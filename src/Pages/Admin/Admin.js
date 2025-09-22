@@ -99,7 +99,7 @@ const AdminDashboard = () => {
 
   const rowsPerPage = 10;
 
-  const fetchUsers = async (pageNum = 0) => {
+  const fetchUsers = async () => {
     try {
       const token = localStorage.getItem("token");
       if (!token || isLoading) return;
@@ -112,10 +112,8 @@ const AdminDashboard = () => {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({
-          limit: rowsPerPage,
-          offset: pageNum * rowsPerPage,
-        }),
+        // ❌ bỏ limit/offset
+        body: JSON.stringify({}),
       });
 
       const text = await res.text();
@@ -129,21 +127,13 @@ const AdminDashboard = () => {
 
       const result = Array.isArray(data) ? data[0]?.result : data?.result;
       if (result) {
-        if (pageNum === 0) {
-          setUsers(result.accounts || []);
-        } else {
-          setUsers((prev) => [...prev, ...(result.accounts || [])]);
-        }
+        setUsers(result.accounts || []);
         setStats({
           total_accounts: result.total_accounts,
           total_admin: result.total_admin,
           total_manager: result.total_manager,
           total_banned: result.total_banned,
         });
-
-        if ((result.accounts || []).length < rowsPerPage) {
-          setHasMore(false);
-        }
       }
     } catch (err) {
       console.error("Lỗi fetch admin:", err);
@@ -154,7 +144,7 @@ const AdminDashboard = () => {
 
   // lần đầu mount
   useEffect(() => {
-    fetchUsers(0);
+    fetchUsers();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -276,10 +266,12 @@ const AdminDashboard = () => {
     );
   });
 
-  const paginatedUsers = filteredUsers.slice(
+  const paginatedUsers = users.slice(
     page * rowsPerPage,
     page * rowsPerPage + rowsPerPage
   );
+
+  const totalPages = Math.ceil(users.length / rowsPerPage);
 
   const handleMoreMenuOpen = (event, user) => {
     console.log("👉 Open menu cho user:", user);
@@ -459,7 +451,10 @@ const AdminDashboard = () => {
           Admin Dashboard
         </Typography>
       </Box>
-      <div style={{ minHeight: "100vh", padding: "24px", marginTop: "50px" }} className={cx("container")}>
+      <div
+        style={{ minHeight: "100vh", padding: "24px", marginTop: "50px" }}
+        className={cx("container")}
+      >
         <div style={{ width: "100%" }}>
           {/* Header */}
           <div
@@ -921,7 +916,10 @@ const AdminDashboard = () => {
 
                     <Button
                       variant="contained"
-                      disabled={!hasMore}
+                      disabled={
+                        page >=
+                        Math.ceil(filteredUsers.length / rowsPerPage) - 1
+                      }
                       onClick={() => setPage((prev) => prev + 1)}
                       sx={{
                         minWidth: 32,

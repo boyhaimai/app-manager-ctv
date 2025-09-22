@@ -445,7 +445,11 @@ function ManagePage() {
                     displayEmpty
                   >
                     {configs.map((cfg) => (
-                      <MenuItem key={cfg.id} value={cfg.id}>
+                      <MenuItem
+                        key={cfg.id}
+                        value={cfg.id}
+                        sx={{ fontSize: { xs: "12px", sm: "14px" } }}
+                      >
                         {cfg.name_project}
                       </MenuItem>
                     ))}
@@ -467,6 +471,7 @@ function ManagePage() {
                     textTransform: "none",
                     borderColor: "black", // viền đen
                     color: "black", // chữ đen
+                    fontSize: { xs: "12px", sm: "14px" }, // chữ nhỏ trên mobile
                     "&:hover": {
                       borderColor: "black",
                       backgroundColor: "rgba(0,0,0,0.1)", // hover có nền xám nhẹ
@@ -489,10 +494,11 @@ function ManagePage() {
                   fullWidth
                   sx={{
                     textTransform: "none",
-                    backgroundColor: "black", // nền đen
-                    color: "white", // chữ trắng
+                    backgroundColor: "black",
+                    color: "white",
+                    fontSize: { xs: "12px", sm: "14px" }, // chữ nhỏ trên mobile
                     "&:hover": {
-                      backgroundColor: "#333", // hover đen nhạt hơn
+                      backgroundColor: "#333",
                     },
                   }}
                 >

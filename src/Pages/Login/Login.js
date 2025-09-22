@@ -50,6 +50,84 @@ function a11yProps(index) {
     "aria-controls": `simple-tabpanel-${index}`,
   };
 }
+// Thêm vào trước component Login
+const prefixMap = {
+  "0162": "032",
+  "0163": "033",
+  "0164": "034",
+  "0165": "035",
+  "0166": "036",
+  "0167": "037",
+  "0168": "038",
+  "0169": "039",
+  "0120": "070",
+  "0121": "079",
+  "0122": "077",
+  "0123": "083",
+  "0124": "084",
+  "0125": "085",
+  "0126": "076",
+  "0127": "081",
+  "0128": "078",
+  "0129": "082",
+  "0182": "052",
+  "0186": "056",
+  "0188": "058",
+  "0199": "059",
+};
+
+const validPrefixes = [
+  "032",
+  "033",
+  "034",
+  "035",
+  "036",
+  "037",
+  "038",
+  "039",
+  "070",
+  "076",
+  "077",
+  "078",
+  "079",
+  "081",
+  "082",
+  "083",
+  "084",
+  "085",
+  "088",
+  "052",
+  "056",
+  "058",
+  "059",
+  "090",
+  "091",
+  "092",
+  "093",
+  "094",
+  "095",
+  "096",
+  "097",
+  "098",
+  "099",
+];
+
+function validatePhone(input) {
+  let digits = (input || "").replace(/\D/g, "");
+
+  if (digits.length === 11) {
+    const oldPrefix = digits.slice(0, 4);
+    const rest = digits.slice(4);
+    const newPrefix = prefixMap[oldPrefix];
+    if (!newPrefix) return null;
+    digits = newPrefix + rest;
+  }
+
+  if (digits.length === 10 && validPrefixes.includes(digits.slice(0, 3))) {
+    return digits;
+  }
+  return null;
+}
 
 function Login() {
   const [name, setName] = useState("");
@@ -184,6 +262,16 @@ function Login() {
       return; // ⛔ Không post
     }
 
+    const normalizedPhone = validatePhone(phone);
+    if (!normalizedPhone) {
+      setSnackbar({
+        open: true,
+        message: "Số điện thoại không hợp lệ. Vui lòng nhập số Việt Nam 10 số.",
+        severity: "error",
+      });
+      return;
+    }
+
     setIsLoading(true);
 
     try {
@@ -194,7 +282,7 @@ function Login() {
           Authorization: "Basic " + btoa("boyhaimais:bangdz202"),
         },
         body: JSON.stringify({
-          phone,
+          phone: normalizedPhone,
           encryptedPassword: cipher,
           cf_token: cfToken,
         }),
@@ -311,6 +399,15 @@ function Login() {
       });
       return;
     }
+    const normalizedPhone = validatePhone(phone);
+    if (!normalizedPhone) {
+      setSnackbar({
+        open: true,
+        message: "Số điện thoại không hợp lệ. Vui lòng nhập số Việt Nam 10 số.",
+        severity: "error",
+      });
+      return;
+    }
 
     if (password.length < 6) {
       setSnackbar({
@@ -350,7 +447,8 @@ function Login() {
         },
         body: JSON.stringify({
           name,
-          phone,
+          phone: normalizedPhone,
+          password,
           encryptedPassword: cipher,
           cf_token: cfTokenRegister, // gửi token Captcha
         }),
@@ -447,7 +545,7 @@ function Login() {
                 Số điện thoại
               </label>
               <input
-                type="text"
+                type="tel"
                 id="phone-login"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
@@ -554,7 +652,7 @@ function Login() {
                 Số điện thoại
               </label>
               <input
-                type="text"
+                type="tel"
                 id="phone-register"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
