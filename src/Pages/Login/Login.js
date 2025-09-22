@@ -83,13 +83,6 @@ function Login() {
   }
 
   useEffect(() => {
-    // gắn callback vào window để Turnstile gọi được
-    window.cfCallback = (token) => {
-      setCfToken(token);
-      console.log("Turnstile token:", token);
-    };
-
-    // nạp script Turnstile nếu chưa có
     if (!document.querySelector("#cf-turnstile-script")) {
       const script = document.createElement("script");
       script.src = "https://challenges.cloudflare.com/turnstile/v0/api.js";
@@ -98,12 +91,42 @@ function Login() {
       script.id = "cf-turnstile-script";
       document.body.appendChild(script);
     }
-  }, []);
 
-  window.cfCallbackRegister = (token) => {
-    setCfTokenRegister(token);
-    console.log("Turnstile token (register):", token);
-  };
+    // Render Captcha sau khi script load
+    const renderCaptcha = () => {
+      if (window.turnstile) {
+        if (value === 0) {
+          window.turnstile.render(
+            document.querySelector(".cf-turnstile-login"),
+            { sitekey: "0x4AAAAAAB2ihgOXExfs5zoP", callback: "cfCallback" }
+          );
+        } else if (value === 1) {
+          window.turnstile.render(
+            document.querySelector(".cf-turnstile-register"),
+            {
+              sitekey: "0x4AAAAAAB2ihgOXExfs5zoP",
+              callback: "cfCallbackRegister",
+            }
+          );
+        }
+      }
+    };
+
+    // Nếu script đã load sẵn
+    if (window.turnstile) renderCaptcha();
+    else {
+      // Nếu chưa load xong, chờ 1 giây thử lại
+      const timer = setTimeout(renderCaptcha, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [value]);
+
+  if (window.turnstile) {
+    if (value === 0)
+      window.turnstile.reset(document.querySelector(".cf-turnstile-login"));
+    else
+      window.turnstile.reset(document.querySelector(".cf-turnstile-register"));
+  }
 
   useEffect(() => {
     const savedPhone = localStorage.getItem("savedPhone");
@@ -463,7 +486,7 @@ function Login() {
             </div>
 
             <div
-              className="cf-turnstile"
+              className="cf-turnstile-login"
               data-sitekey="0x4AAAAAAB2ihgOXExfs5zoP"
               data-callback="cfCallback"
             ></div>
@@ -603,7 +626,7 @@ function Login() {
             </div>
 
             <div
-              className="cf-turnstile"
+              className="cf-turnstile-register"
               data-sitekey="0x4AAAAAAB2ihgOXExfs5zoP"
               data-callback="cfCallbackRegister"
             ></div>
