@@ -6,7 +6,7 @@ import "@fortawesome/fontawesome-free/css/all.min.css";
 import { useConfig } from "~/Contexts/ConfigContext";
 import CTVList from "~/Components/CTVList/CTVList";
 import { ArrowBack, Menu } from "@mui/icons-material";
-import { Box, Button, Dialog, Drawer, IconButton } from "@mui/material";
+import { Button, Dialog, Drawer } from "@mui/material";
 
 import styles from "./ChatManager.module.scss";
 
@@ -240,7 +240,7 @@ function ChatManager() {
       const mapped = list.map((m, index) => ({
         id: m.id || `${msgPage[activeChat]}-${index}`,
         text: m.content, // ✅ đồng bộ với query
-        sender: m.is_self === true || m.is_self === "true" ? "me" : "other",
+       sender: m.is_selt === true || m.is_selt === "true" ? "me" : "other",
         time: new Date(Number(m.time)).toLocaleString("vi-VN"),
         avatar: m.avatar || "/default-avatar.png",
         isSystemMessage: false,
@@ -299,7 +299,7 @@ function ChatManager() {
     const mapped = msgs.map((m, index) => ({
       id: m.id || `${m.time}-${index}`,
       text: m.content,
-      sender: m.is_self ? "me" : "other",
+      sender: m.is_selt === true || m.is_selt === "true" ? "me" : "other",
       time: new Date(Number(m.time)).toLocaleString("vi-VN"),
       avatar: m.avatar || "/default-avatar.png",
       isSystemMessage: false,

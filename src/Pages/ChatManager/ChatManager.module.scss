@@ -565,6 +565,8 @@
             background: #667eea;
             color: white;
             margin-left: 8px;
+            position: relative;
+            left: 60px;
           }
 
           .message-time {
@@ -631,6 +633,8 @@
           font-size: 14px;
           line-height: 1.4;
           word-wrap: break-word;
+          width: fit-content; /* 👈 chỉ rộng bằng text */
+          max-width: 70%; /* tránh tràn màn hình */
         }
 
         .message-time {
