@@ -848,3 +848,10 @@
     font-size: 14px;
   }
 }
+
+.image-message {
+  background: transparent !important; /* ❌ bỏ nền trắng */
+  padding: 0 !important; /* ❌ bỏ padding */
+  border: none !important; /* ❌ bỏ viền nếu có */
+  box-shadow: none !important; /* ❌ bỏ đổ bóng */
+}

@@ -240,7 +240,7 @@ function ChatManager() {
       const mapped = list.map((m, index) => ({
         id: m.id || `${msgPage[activeChat]}-${index}`,
         text: m.content, // ✅ đồng bộ với query
-       sender: m.is_selt === true || m.is_selt === "true" ? "me" : "other",
+        sender: m.is_selt === true || m.is_selt === "true" ? "me" : "other",
         time: new Date(Number(m.time)).toLocaleString("vi-VN"),
         avatar: m.avatar || "/default-avatar.png",
         isSystemMessage: false,
@@ -299,6 +299,7 @@ function ChatManager() {
     const mapped = msgs.map((m, index) => ({
       id: m.id || `${m.time}-${index}`,
       text: m.content,
+      href: m.href || null,
       sender: m.is_selt === true || m.is_selt === "true" ? "me" : "other",
       time: new Date(Number(m.time)).toLocaleString("vi-VN"),
       avatar: m.avatar || "/default-avatar.png",
@@ -499,7 +500,16 @@ function ChatManager() {
                             </div>
                             <div className={cx("conversation-preview")}>
                               <span className={cx("last-message")}>
-                                {conversation.recentChat}
+                                {conversation.href &&
+                                (!conversation.recentChat ||
+                                  conversation.recentChat ===
+                                    "[non-text message]")
+                                  ? "[Hình ảnh]"
+                                  : conversation.recentChat &&
+                                    conversation.recentChat !==
+                                      "[non-text message]"
+                                  ? conversation.recentChat
+                                  : ""}
                               </span>
                             </div>
                           </div>
@@ -606,8 +616,50 @@ function ChatManager() {
                                 {message.text}
                               </div>
                             ) : (
-                              <div className={cx("message-bubble")}>
-                                {message.text}
+                              <div
+                                className={cx("message-bubble", {
+                                  "image-message":
+                                    message.href &&
+                                    (!message.text ||
+                                      message.text === "[non-text message]"),
+                                })}
+                              >
+                                {message.href &&
+                                (!message.text ||
+                                  message.text === "[non-text message]") ? (
+                                  message.href.match(
+                                    /\.(jpg|jpeg|png|gif|webp)$/i
+                                  ) ? (
+                                    <a
+                                      href={message.href}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                    >
+                                      <img
+                                        src={message.href}
+                                        alt="attachment"
+                                        style={{
+                                          maxWidth: "220px",
+                                          borderRadius: "10px",
+                                          display: "block",
+                                        }}
+                                      />
+                                    </a>
+                                  ) : (
+                                    <a
+                                      href={message.href}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                    >
+                                      {message.href}
+                                    </a>
+                                  )
+                                ) : message.text &&
+                                  message.text !== "[non-text message]" ? (
+                                  message.text
+                                ) : (
+                                  <i>(Tin nhắn trống)</i>
+                                )}
                               </div>
                             )}
                             <div className={cx("message-time")}>
@@ -805,7 +857,16 @@ function ChatManager() {
                             </div>
                             <div className={cx("conversation-preview")}>
                               <span className={cx("last-message")}>
-                                {conversation.recentChat}
+                                {conversation.href &&
+                                (!conversation.recentChat ||
+                                  conversation.recentChat ===
+                                    "[non-text message]")
+                                  ? "[Hình ảnh]"
+                                  : conversation.recentChat &&
+                                    conversation.recentChat !==
+                                      "[non-text message]"
+                                  ? conversation.recentChat
+                                  : ""}
                               </span>
                             </div>
                           </div>
@@ -916,8 +977,51 @@ function ChatManager() {
                                     {message.text}
                                   </div>
                                 ) : (
-                                  <div className={cx("message-bubble")}>
-                                    {message.text}
+                                  <div
+                                    className={cx("message-bubble", {
+                                      "image-message":
+                                        message.href &&
+                                        (!message.text ||
+                                          message.text ===
+                                            "[non-text message]"),
+                                    })}
+                                  >
+                                    {message.href &&
+                                    (!message.text ||
+                                      message.text === "[non-text message]") ? (
+                                      message.href.match(
+                                        /\.(jpg|jpeg|png|gif|webp)$/i
+                                      ) ? (
+                                        <a
+                                          href={message.href}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                        >
+                                          <img
+                                            src={message.href}
+                                            alt="attachment"
+                                            style={{
+                                              maxWidth: "220px",
+                                              borderRadius: "10px",
+                                              display: "block",
+                                            }}
+                                          />
+                                        </a>
+                                      ) : (
+                                        <a
+                                          href={message.href}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                        >
+                                          {message.href}
+                                        </a>
+                                      )
+                                    ) : message.text &&
+                                      message.text !== "[non-text message]" ? (
+                                      message.text
+                                    ) : (
+                                      <i>(Tin nhắn trống)</i>
+                                    )}
                                   </div>
                                 )}
                                 <div className={cx("message-time")}>
