@@ -239,7 +239,8 @@ function ChatManager() {
       const list = await loadMessages(ctvId, activeChat, msgPage[activeChat]);
       const mapped = list.map((m, index) => ({
         id: m.id || `${msgPage[activeChat]}-${index}`,
-        text: m.content, // ✅ đồng bộ với query
+        text: m.content,
+        href: m.href || null, // ✅ thêm dòng này
         sender: m.is_selt === true || m.is_selt === "true" ? "me" : "other",
         time: new Date(Number(m.time)).toLocaleString("vi-VN"),
         avatar: m.avatar || "/default-avatar.png",
@@ -640,6 +641,7 @@ function ChatManager() {
                                         alt="attachment"
                                         style={{
                                           maxWidth: "220px",
+                                          maxHeight: "100px",
                                           borderRadius: "10px",
                                           display: "block",
                                         }}
@@ -1002,6 +1004,7 @@ function ChatManager() {
                                             alt="attachment"
                                             style={{
                                               maxWidth: "220px",
+                                              maxHeight: "100px",
                                               borderRadius: "10px",
                                               display: "block",
                                             }}

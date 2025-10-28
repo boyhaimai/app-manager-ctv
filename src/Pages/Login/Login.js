@@ -725,11 +725,11 @@ function Login() {
               </div>
             </div>
 
-            <div
+            {/* <div
               className="cf-turnstile-register"
               data-sitekey="0x4AAAAAAB2ihgOXExfs5zoP"
               data-callback="cfCallbackRegister"
-            ></div>
+            ></div> */}
 
             {registerError && <p className={styles.error}>{registerError}</p>}
 
