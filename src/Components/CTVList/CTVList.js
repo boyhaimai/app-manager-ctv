@@ -95,10 +95,15 @@ function CTVList({ onSelect }) {
               onClick={onSelect}
             >
               <img
-                src={ctv.avatar}
-                alt={ctv.name}
+                src={
+                  ctv.avatar && ctv.avatar.trim() !== ""
+                    ? ctv.avatar
+                    : "https://stc-zaloprofile.zdn.vn/pc/v1/images/zalo_sharelogo.png"
+                }
+                alt={ctv.name || "CTV"}
                 className={cx("ctv-avatar")}
               />
+
               <div className={cx("ctv-info")}>
                 <span className={cx("ctv-name")}>{ctv.name}</span>
                 <span className={cx("ctv-recent-chat")}>{ctv.recentChat}</span>

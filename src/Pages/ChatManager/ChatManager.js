@@ -115,7 +115,16 @@ function ChatManager() {
       let newList = data[0]?.listCtv || [];
 
       // Lọc bỏ item không hợp lệ (id hoặc name rỗng/null)
-      newList = newList.filter((item) => item.id && item.name);
+      newList = newList
+        .filter((item) => item.id && item.name)
+        .map((item) => ({
+          ...item,
+          avatar:
+            item.avatar && item.avatar.trim() !== ""
+              ? item.avatar
+              : "https://stc-zaloprofile.zdn.vn/pc/v1/images/zalo_sharelogo.png",
+        }));
+
       if (newList.length < limit) setHasMore(false);
       setCustomerList((prev) => {
         const merged = [...prev, ...newList];
@@ -240,10 +249,13 @@ function ChatManager() {
       const mapped = list.map((m, index) => ({
         id: m.id || `${msgPage[activeChat]}-${index}`,
         text: m.content,
-        href: m.href || null, // ✅ thêm dòng này
+        href: m.href || null,
         sender: m.is_selt === true || m.is_selt === "true" ? "me" : "other",
         time: new Date(Number(m.time)).toLocaleString("vi-VN"),
-        avatar: m.avatar || "/default-avatar.png",
+        avatar:
+          m.avatar && m.avatar.trim() !== ""
+            ? m.avatar
+            : "https://stc-zaloprofile.zdn.vn/pc/v1/images/zalo_sharelogo.png",
         isSystemMessage: false,
       }));
 
@@ -303,7 +315,10 @@ function ChatManager() {
       href: m.href || null,
       sender: m.is_selt === true || m.is_selt === "true" ? "me" : "other",
       time: new Date(Number(m.time)).toLocaleString("vi-VN"),
-      avatar: m.avatar || "/default-avatar.png",
+      avatar:
+        m.avatar && m.avatar.trim() !== ""
+          ? m.avatar
+          : "https://stc-zaloprofile.zdn.vn/pc/v1/images/zalo_sharelogo.png",
       isSystemMessage: false,
     }));
 
