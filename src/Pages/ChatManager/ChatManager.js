@@ -309,17 +309,57 @@ function ChatManager() {
       setMsgHasMore((prev) => ({ ...prev, [conversation.id]: false }));
     }
 
-    const mapped = msgs.map((m, index) => ({
-      id: m.id || `${m.time}-${index}`,
-      text: m.content,
-      href: m.href || null,
-      sender: m.is_selt === true || m.is_selt === "true" ? "me" : "other",
-      time: new Date(Number(m.time)).toLocaleString("vi-VN"),
-      avatar:
-        m.avatar && m.avatar.trim() !== ""
-          ? m.avatar
-          : "https://stc-zaloprofile.zdn.vn/pc/v1/images/zalo_sharelogo.png",
-      isSystemMessage: false,
+    // Gom ảnh có cùng thời gian
+    const grouped = [];
+    let currentGroup = null;
+
+    msgs.forEach((m, index) => {
+      const isImage =
+        m.href && (!m.content || m.content === "[non-text message]");
+      const time = m.time;
+      const sender =
+        m.is_selt === true || m.is_selt === "true" ? "me" : "other";
+
+      if (
+        isImage &&
+        currentGroup &&
+        currentGroup.time === time &&
+        currentGroup.sender === sender
+      ) {
+        // cùng thời gian và cùng người gửi => gom vào nhóm hiện tại
+        currentGroup.images.push(m.href);
+      } else {
+        // push nhóm cũ nếu có
+        if (currentGroup) grouped.push(currentGroup);
+        // tạo nhóm mới
+        currentGroup = {
+          id: m.id || `${m.time}-${index}`,
+          sender,
+          time,
+          avatar:
+            m.avatar && m.avatar.trim() !== ""
+              ? m.avatar
+              : "https://stc-zaloprofile.zdn.vn/pc/v1/images/zalo_sharelogo.png",
+          text: !isImage ? m.content : null,
+          href: isImage ? m.href : null,
+          images: isImage ? [m.href] : [],
+          isSystemMessage: false,
+        };
+      }
+    });
+    // push nhóm cuối
+    if (currentGroup) grouped.push(currentGroup);
+
+    // chuyển thành mapped dạng hiển thị
+    const mapped = grouped.map((g) => ({
+      id: g.id,
+      text: g.text,
+      href: g.href,
+      images: g.images,
+      sender: g.sender,
+      time: new Date(Number(g.time)).toLocaleString("vi-VN"),
+      avatar: g.avatar,
+      isSystemMessage: g.isSystemMessage,
     }));
 
     setMessages((prev) => ({
@@ -640,37 +680,63 @@ function ChatManager() {
                                       message.text === "[non-text message]"),
                                 })}
                               >
-                                {message.href &&
-                                (!message.text ||
-                                  message.text === "[non-text message]") ? (
-                                  message.href.match(
-                                    /\.(jpg|jpeg|png|gif|webp)$/i
-                                  ) ? (
-                                    <a
-                                      href={message.href}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                    >
-                                      <img
-                                        src={message.href}
-                                        alt="attachment"
-                                        style={{
-                                          maxWidth: "220px",
-                                          maxHeight: "100px",
-                                          borderRadius: "10px",
-                                          display: "block",
-                                        }}
-                                      />
-                                    </a>
-                                  ) : (
-                                    <a
-                                      href={message.href}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                    >
-                                      {message.href}
-                                    </a>
-                                  )
+                                {message.images && message.images.length > 0 ? (
+                                  <div
+                                    className={cx("multi-image-grid")}
+                                    style={{
+                                      display: "grid",
+                                      gridTemplateColumns:
+                                        message.images.length === 1
+                                          ? "1fr"
+                                          : message.images.length === 2
+                                          ? "repeat(2, 1fr)"
+                                          : "repeat(3, 1fr)",
+                                      gap: "6px",
+                                      maxWidth: "280px",
+                                    }}
+                                  >
+                                    {message.images.map((img, idx) => (
+                                      <a
+                                        key={idx}
+                                        href={img}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                      >
+                                        <img
+                                          src={img}
+                                          alt="attachment"
+                                          className={cx("chat-image")}
+                                          style={{
+                                            width: "100%",
+                                            height: "90px",
+                                            objectFit: "cover",
+                                            borderRadius: "8px",
+                                          }}
+                                        />
+                                      </a>
+                                    ))}
+                                  </div>
+                                ) : message.href &&
+                                  (!message.text ||
+                                    message.text === "[non-text message]") ? (
+                                  <a
+                                    href={message.href}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                  >
+                                    <img
+                                      src={message.href}
+                                      alt="attachment"
+                                      className={cx("chat-image")}
+                                      style={{
+                                        maxWidth: "220px",
+                                        maxHeight: "120px",
+                                        borderRadius: "10px",
+                                        display: "block",
+                                        objectFit: "cover",
+                                      }}
+                                    />
+                                  </a>
                                 ) : message.text &&
                                   message.text !== "[non-text message]" ? (
                                   message.text
@@ -1003,37 +1069,65 @@ function ChatManager() {
                                             "[non-text message]"),
                                     })}
                                   >
-                                    {message.href &&
-                                    (!message.text ||
-                                      message.text === "[non-text message]") ? (
-                                      message.href.match(
-                                        /\.(jpg|jpeg|png|gif|webp)$/i
-                                      ) ? (
-                                        <a
-                                          href={message.href}
-                                          target="_blank"
-                                          rel="noopener noreferrer"
-                                        >
-                                          <img
-                                            src={message.href}
-                                            alt="attachment"
-                                            style={{
-                                              maxWidth: "220px",
-                                              maxHeight: "100px",
-                                              borderRadius: "10px",
-                                              display: "block",
-                                            }}
-                                          />
-                                        </a>
-                                      ) : (
-                                        <a
-                                          href={message.href}
-                                          target="_blank"
-                                          rel="noopener noreferrer"
-                                        >
-                                          {message.href}
-                                        </a>
-                                      )
+                                    {message.images &&
+                                    message.images.length > 0 ? (
+                                      <div
+                                        className={cx("multi-image-grid")}
+                                        style={{
+                                          display: "grid",
+                                          gridTemplateColumns:
+                                            message.images.length === 1
+                                              ? "1fr"
+                                              : message.images.length === 2
+                                              ? "repeat(2, 1fr)"
+                                              : "repeat(3, 1fr)",
+                                          gap: "6px",
+                                          maxWidth: "280px",
+                                        }}
+                                      >
+                                        {message.images.map((img, idx) => (
+                                          <a
+                                            key={idx}
+                                            href={img}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                          >
+                                            <img
+                                              src={img}
+                                              alt="attachment"
+                                              className={cx("chat-image")}
+                                              style={{
+                                                width: "100%",
+                                                height: "90px",
+                                                objectFit: "cover",
+                                                borderRadius: "8px",
+                                              }}
+                                            />
+                                          </a>
+                                        ))}
+                                      </div>
+                                    ) : message.href &&
+                                      (!message.text ||
+                                        message.text ===
+                                          "[non-text message]") ? (
+                                      <a
+                                        href={message.href}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                      >
+                                        <img
+                                          src={message.href}
+                                          alt="attachment"
+                                          className={cx("chat-image")}
+                                          style={{
+                                            maxWidth: "220px",
+                                            maxHeight: "120px",
+                                            borderRadius: "10px",
+                                            display: "block",
+                                            objectFit: "cover",
+                                          }}
+                                        />
+                                      </a>
                                     ) : message.text &&
                                       message.text !== "[non-text message]" ? (
                                       message.text
@@ -1042,9 +1136,13 @@ function ChatManager() {
                                     )}
                                   </div>
                                 )}
-                                <div className={cx("message-time")}>
-                                  {message.time}
-                                </div>
+                                {(message.text ||
+                                  message.images?.length > 0 ||
+                                  message.href) && (
+                                  <div className={cx("message-time")}>
+                                    {message.time}
+                                  </div>
+                                )}
                               </div>
                               {message.sender === "me" && (
                                 <div className={cx("message-status")}>
