@@ -106,7 +106,7 @@ function CTVList({ onSelect }) {
 
               <div className={cx("ctv-info")}>
                 <span className={cx("ctv-name")}>{ctv.name}</span>
-                <span className={cx("ctv-recent-chat")}>{ctv.recentChat}</span>
+                {/* <span className={cx("ctv-recent-chat")}>{ctv.recentChat}</span> */}
               </div>
             </Link>
           </li>
