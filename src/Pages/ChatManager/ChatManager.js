@@ -310,6 +310,7 @@ function ChatManager() {
     }
 
     // Gom ảnh có cùng thời gian
+    // Gom ảnh có cùng thời gian (xem như gửi 1 lần)
     const grouped = [];
     let currentGroup = null;
 
@@ -320,17 +321,36 @@ function ChatManager() {
       const sender =
         m.is_selt === true || m.is_selt === "true" ? "me" : "other";
 
+      // nếu chưa có nhóm thì tạo luôn
+      if (!currentGroup) {
+        currentGroup = {
+          id: m.id || `${m.time}-${index}`,
+          sender,
+          time,
+          avatar:
+            m.avatar && m.avatar.trim() !== ""
+              ? m.avatar
+              : "https://stc-zaloprofile.zdn.vn/pc/v1/images/zalo_sharelogo.png",
+          text: !isImage ? m.content : null,
+          href: isImage ? m.href : null,
+          images: isImage ? [m.href] : [],
+          isSystemMessage: false,
+        };
+        return;
+      }
+
+      // tính chênh lệch thời gian so với nhóm hiện tại (phải có currentGroup)
+      const timeDiff = Math.abs(Number(time) - Number(currentGroup.time));
+
       if (
         isImage &&
-        currentGroup &&
-        currentGroup.time === time &&
-        currentGroup.sender === sender
+        currentGroup.sender === sender &&
+        timeDiff < 3000 // trong 3 giây thì gộp chung
       ) {
-        // cùng thời gian và cùng người gửi => gom vào nhóm hiện tại
         currentGroup.images.push(m.href);
       } else {
-        // push nhóm cũ nếu có
-        if (currentGroup) grouped.push(currentGroup);
+        // đẩy nhóm cũ vào mảng
+        grouped.push(currentGroup);
         // tạo nhóm mới
         currentGroup = {
           id: m.id || `${m.time}-${index}`,
@@ -347,10 +367,11 @@ function ChatManager() {
         };
       }
     });
-    // push nhóm cuối
+
+    // thêm nhóm cuối
     if (currentGroup) grouped.push(currentGroup);
 
-    // chuyển thành mapped dạng hiển thị
+    // map sang dạng hiển thị
     const mapped = grouped.map((g) => ({
       id: g.id,
       text: g.text,
