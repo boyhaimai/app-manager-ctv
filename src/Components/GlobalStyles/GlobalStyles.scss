@@ -75,7 +75,7 @@
   --text-secondary: #b0b0b0;
 }
 
-* {
+*:not(i):not(.fa):not(.fa-solid):not(.fa-regular):not(.fa-brands) {
   font-family: var(--lato_font) !important;
 }
 
