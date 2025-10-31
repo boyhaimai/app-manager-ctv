@@ -27,6 +27,7 @@ const urlRegister = "https://wf.mkt04.vawayai.com/webhook/register_msg";
 const urlLogin = "https://wf.mkt04.vawayai.com/webhook/login_msg";
 // const urlCheckExistToken =
 //   "https://wf.mkt04.vawayai.com/webhook-test/check_exist_toekn";
+const quen_pass = "https://wf.mkt04.vawayai.com/webhook-test/quen_pass";
 
 function TabPanel(props) {
   const { children, value, index, ...other } = props;
@@ -153,6 +154,9 @@ function Login() {
   });
   const [cfToken, setCfToken] = useState("");
   const [cfTokenRegister, setCfTokenRegister] = useState("");
+  const [isForgotPass, setIsForgotPass] = useState(false);
+  const [forgotPhone, setForgotPhone] = useState("");
+  const [cfTokenForgot, setCfTokenForgot] = useState("");
 
   let cipher = password;
   for (let i = 0; i < 12; i++) {
@@ -328,7 +332,7 @@ function Login() {
               open: true,
               title: "Tài khoản của bạn đã hết hạn",
               message:
-                "Tài khoản của bạn đã hết hạn. Vui lòng liên hệ trợ lý AI với số điện thoại Zalo: 0359686776 để gia hạn.",
+                "Tài khoản của bạn đã hết hạn. Vui lòng liên hệ quản trị viên với số điện thoại Zalo: 0984635286 để gia hạn.",
               icon: <WarningAmber color="warning" sx={{ mr: 1 }} />,
             });
             return;
@@ -379,6 +383,60 @@ function Login() {
       setIsLoading(false);
       setLoginError("Có lỗi xảy ra, vui lòng thử lại.");
       console.error(error);
+    }
+  };
+
+  const handleForgotPassword = async (e) => {
+    e.preventDefault();
+
+    const normalizedPhone = validatePhone(forgotPhone);
+    if (!normalizedPhone) {
+      setSnackbar({
+        open: true,
+        message: "Số điện thoại không hợp lệ.",
+        severity: "error",
+      });
+      return;
+    }
+
+    try {
+      const res = await fetch(quen_pass, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          phone: normalizedPhone,
+          // cf_token: cfTokenForgot,
+        }),
+      });
+
+      const text = await res.text();
+      let data;
+      try {
+        data = JSON.parse(text);
+      } catch {
+        setSnackbar({
+          open: true,
+          message: "Phản hồi không hợp lệ từ server.",
+          severity: "error",
+        });
+        return;
+      }
+
+      setSnackbar({
+        open: true,
+        message:
+          data.message || "Yêu cầu quên mật khẩu đã được gửi cho bạn qua Zalo.",
+        severity: data.success ? "success" : "error",
+      });
+    } catch (error) {
+      console.error(error);
+      setSnackbar({
+        open: true,
+        message: "Có lỗi xảy ra, vui lòng thử lại.",
+        severity: "error",
+      });
     }
   };
 
@@ -539,98 +597,157 @@ function Login() {
           </Tabs>
         </Box>
         <TabPanel value={value} index={0}>
-          <form onSubmit={handleLogin} className={styles.loginForm}>
-            <div className={styles.inputGroup}>
-              <label htmlFor="phone-login" className={styles.label}>
-                Số điện thoại
-              </label>
-              <input
-                type="tel"
-                id="phone-login"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                className={styles.input}
-                placeholder="Nhập phone"
-                disabled={isLoading}
-              />
-            </div>
-
-            <div className={styles.inputGroup}>
-              <label htmlFor="password-login" className={styles.label}>
-                Mật khẩu
-              </label>
-              <div className={styles.passwordInputWrapper}>
+          {!isForgotPass ? (
+            <form onSubmit={handleLogin} className={styles.loginForm}>
+              <div className={styles.inputGroup}>
+                <label htmlFor="phone-login" className={styles.label}>
+                  Số điện thoại
+                </label>
                 <input
-                  type={showPassword ? "text" : "password"}
-                  id="password-login"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  type="tel"
+                  id="phone-login"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
                   className={styles.input}
-                  placeholder="Nhập mật khẩu"
+                  placeholder="Nhập phone"
                   disabled={isLoading}
                 />
-                <IconButton
-                  aria-label="toggle password visibility"
-                  onClick={handleClickShowPassword}
-                  onMouseDown={handleMouseDownPassword}
-                  edge="end"
-                  className={styles.passwordVisibilityIcon}
-                >
-                  {showPassword ? (
-                    <VisibilityOff className={cx("icon_show")} />
-                  ) : (
-                    <Visibility className={cx("icon_show")} />
-                  )}
-                </IconButton>
               </div>
-            </div>
 
-            <div
-              className="cf-turnstile-login"
-              data-sitekey="0x4AAAAAAB2ihgOXExfs5zoP"
-              data-callback="cfCallback"
-            ></div>
+              <div className={styles.inputGroup}>
+                <label htmlFor="password-login" className={styles.label}>
+                  Mật khẩu
+                </label>
+                <div className={styles.passwordInputWrapper}>
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    id="password-login"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className={styles.input}
+                    placeholder="Nhập mật khẩu"
+                    disabled={isLoading}
+                  />
+                  <IconButton
+                    aria-label="toggle password visibility"
+                    onClick={handleClickShowPassword}
+                    onMouseDown={handleMouseDownPassword}
+                    edge="end"
+                    className={styles.passwordVisibilityIcon}
+                  >
+                    {showPassword ? (
+                      <VisibilityOff className={cx("icon_show")} />
+                    ) : (
+                      <Visibility className={cx("icon_show")} />
+                    )}
+                  </IconButton>
+                </div>
+              </div>
 
-            {loginError && <p className={styles.error}>{loginError}</p>}
-
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                marginTop: "8px",
-                marginLeft: "10px",
-              }}
-            >
-              <input
-                type="checkbox"
-                id="rememberMe"
-                checked={rememberMe}
-                onChange={(e) => setRememberMe(e.target.checked)}
-              />
-              <label
-                htmlFor="rememberMe"
-                style={{ marginLeft: "6px", fontSize: "18px" }}
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  marginTop: "8px",
+                  marginLeft: "10px",
+                }}
               >
-                Nhớ mật khẩu
-              </label>
-            </div>
+                <input
+                  type="checkbox"
+                  id="rememberMe"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                />
+                <label
+                  htmlFor="rememberMe"
+                  style={{ marginLeft: "6px", fontSize: "18px" }}
+                >
+                  Nhớ mật khẩu
+                </label>
+              </div>
 
-            <button
-              type="submit"
-              className={styles.loginButton}
-              disabled={isLoading}
-            >
-              {isLoading ? (
-                <span className={styles.loading}>
-                  <span className={styles.spinner}></span>
-                  Đang đăng nhập...
-                </span>
-              ) : (
-                "Đăng nhập"
-              )}
-            </button>
-          </form>
+              {/* <Box sx={{ display: "flex", justifyContent: "space-between" }}>
+                <button
+                  type="submit"
+                  className={styles.loginButton}
+                  disabled={isLoading}
+                >
+                  {isLoading ? (
+                    <span className={styles.loading}>
+                      <span className={styles.spinner}></span>
+                      Đang đăng nhập...
+                    </span>
+                  ) : (
+                    "Đăng nhập"
+                  )}
+                </button>
+
+                <button
+                  type="button"
+                  className={styles.loginButton}
+                  onClick={() => setIsForgotPass(true)}
+                >
+                  Quên mật khẩu
+                </button>
+              </Box> */}
+              <button
+                type="submit"
+                className={styles.loginButton}
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <span className={styles.loading}>
+                    <span className={styles.spinner}></span>
+                    Đang đăng nhập...
+                  </span>
+                ) : (
+                  "Đăng nhập"
+                )}
+              </button>
+            </form>
+          ) : (
+            <form onSubmit={handleForgotPassword} className={styles.loginForm}>
+              <div className={styles.inputGroup}>
+                <label htmlFor="forgot-phone" className={styles.label}>
+                  Nhập số điện thoại
+                </label>
+                <input
+                  type="tel"
+                  id="forgot-phone"
+                  value={forgotPhone}
+                  onChange={(e) => setForgotPhone(e.target.value)}
+                  className={styles.input}
+                  placeholder="Nhập số điện thoại"
+                />
+              </div>
+
+              <Box
+                sx={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  gap: 1,
+                }}
+              >
+                <button
+                  type="button"
+                  className={styles.loginButton}
+                  style={{ backgroundColor: "#888", fontSize: 14 }}
+                  onClick={() => setIsForgotPass(false)}
+                >
+                  Quay lại đăng nhập
+                </button>
+                <button
+                  type="submit"
+                  className={styles.loginButton}
+                  style={{ fontSize: 14 }}
+                >
+                  Quên mật khẩu
+                </button>
+              </Box>
+            </form>
+          )}
         </TabPanel>
+
         <TabPanel value={value} index={1}>
           <form onSubmit={handleRegister} className={styles.loginForm}>
             <div className={styles.inputGroup}>

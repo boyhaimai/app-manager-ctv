@@ -5,7 +5,7 @@ import "@fortawesome/fontawesome-free/css/all.min.css";
 
 import { useConfig } from "~/Contexts/ConfigContext";
 import CTVList from "~/Components/CTVList/CTVList";
-import { ArrowBack, Menu } from "@mui/icons-material";
+import { ArrowBack, Close, Menu } from "@mui/icons-material";
 import { Button, Dialog, Drawer } from "@mui/material";
 
 import styles from "./ChatManager.module.scss";
@@ -34,8 +34,15 @@ function ChatManager() {
   const [openChats, setOpenChats] = useState([]);
   const [activeChat, setActiveChat] = useState(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [previewSrc, setPreviewSrc] = useState(null);
 
   const limit = 20;
+
+  // ✅ Helper: kiểm tra file là ảnh hay video
+  const isImageFile = (url = "") =>
+    url.includes("img_") || url.includes("zalo_");
+  const isVideoFile = (url = "") => url.includes("video");
 
   // --- Thêm helper function ở đầu component (ví dụ ngay sau const limit = 20;)
   const scrollDialogToChat = (chatId, smooth = true) => {
@@ -702,6 +709,7 @@ function ChatManager() {
                                 })}
                               >
                                 {message.images && message.images.length > 0 ? (
+                                  // nhiều ảnh
                                   <div
                                     className={cx("multi-image-grid")}
                                     style={{
@@ -716,15 +724,69 @@ function ChatManager() {
                                       maxWidth: "280px",
                                     }}
                                   >
-                                    {message.images.map((img, idx) => (
-                                      <a
-                                        key={idx}
-                                        href={img}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                      >
+                                    {message.images.map((media, idx) => {
+                                      const isVideo = isVideoFile(media);
+                                      return isVideo ? (
+                                        <div
+                                          key={idx}
+                                          style={{
+                                            position: "relative",
+                                            width: "100%",
+                                            height: "90px",
+                                            borderRadius: "8px",
+                                            overflow: "hidden",
+                                            cursor: "pointer",
+                                          }}
+                                          onClick={() => {
+                                            setPreviewSrc(media);
+                                            setPreviewOpen(true);
+                                          }}
+                                        >
+                                          <video
+                                            src={media}
+                                            className={cx("chat-video")}
+                                            style={{
+                                              width: "100%",
+                                              height: "100%",
+                                              objectFit: "cover",
+                                              borderRadius: "8px",
+                                            }}
+                                            muted
+                                            playsInline
+                                          />
+
+                                          {/* icon play */}
+                                          <div
+                                            style={{
+                                              position: "absolute",
+                                              top: "50%",
+                                              left: "50%",
+                                              transform:
+                                                "translate(-50%, -50%)",
+                                              background: "rgba(0,0,0,0.5)",
+                                              borderRadius: "50%",
+                                              width: "36px",
+                                              height: "36px",
+                                              display: "flex",
+                                              alignItems: "center",
+                                              justifyContent: "center",
+                                            }}
+                                          >
+                                            <svg
+                                              xmlns="http://www.w3.org/2000/svg"
+                                              width="18"
+                                              height="18"
+                                              viewBox="0 0 24 24"
+                                              fill="white"
+                                            >
+                                              <path d="M8 5v14l11-7z" />
+                                            </svg>
+                                          </div>
+                                        </div>
+                                      ) : (
                                         <img
-                                          src={img}
+                                          key={idx}
+                                          src={media}
                                           alt="attachment"
                                           className={cx("chat-image")}
                                           style={{
@@ -732,32 +794,55 @@ function ChatManager() {
                                             height: "90px",
                                             objectFit: "cover",
                                             borderRadius: "8px",
+                                            cursor: "pointer",
+                                          }}
+                                          onClick={() => {
+                                            setPreviewSrc(media);
+                                            setPreviewOpen(true);
                                           }}
                                         />
-                                      </a>
-                                    ))}
+                                      );
+                                    })}
                                   </div>
                                 ) : message.href &&
                                   (!message.text ||
                                     message.text === "[non-text message]") ? (
-                                  <a
-                                    href={message.href}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                  >
-                                    <img
-                                      src={message.href}
-                                      alt="attachment"
-                                      className={cx("chat-image")}
-                                      style={{
-                                        maxWidth: "220px",
-                                        maxHeight: "120px",
-                                        borderRadius: "10px",
-                                        display: "block",
-                                        objectFit: "cover",
-                                      }}
-                                    />
-                                  </a>
+                                  // ảnh hoặc video đơn
+                                  <>
+                                    {isVideoFile(message.href) ? (
+                                      <video
+                                        src={message.href}
+                                        className={cx("chat-video")}
+                                        style={{
+                                          maxWidth: "220px",
+                                          maxHeight: "120px",
+                                          borderRadius: "10px",
+                                          display: "block",
+                                          objectFit: "cover",
+                                          cursor: "pointer",
+                                        }}
+                                      />
+                                    ) : (
+                                      <a
+                                        href={message.href}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                      >
+                                        <img
+                                          src={message.href}
+                                          alt="attachment"
+                                          className={cx("chat-image")}
+                                          style={{
+                                            maxWidth: "220px",
+                                            maxHeight: "120px",
+                                            borderRadius: "10px",
+                                            display: "block",
+                                            objectFit: "cover",
+                                          }}
+                                        />
+                                      </a>
+                                    )}
+                                  </>
                                 ) : message.text &&
                                   message.text !== "[non-text message]" ? (
                                   message.text
@@ -1106,15 +1191,69 @@ function ChatManager() {
                                           maxWidth: "280px",
                                         }}
                                       >
-                                        {message.images.map((img, idx) => (
-                                          <a
-                                            key={idx}
-                                            href={img}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                          >
+                                        {message.images.map((media, idx) => {
+                                          const isVideo = isVideoFile(media);
+                                          return isVideo ? (
+                                            <div
+                                              key={idx}
+                                              style={{
+                                                position: "relative",
+                                                width: "100%",
+                                                height: "90px",
+                                                borderRadius: "8px",
+                                                overflow: "hidden",
+                                                cursor: "pointer",
+                                              }}
+                                              onClick={() => {
+                                                setPreviewSrc(media);
+                                                setPreviewOpen(true);
+                                              }}
+                                            >
+                                              <video
+                                                src={media}
+                                                className={cx("chat-video")}
+                                                style={{
+                                                  width: "100%",
+                                                  height: "100%",
+                                                  objectFit: "cover",
+                                                  borderRadius: "8px",
+                                                }}
+                                                muted
+                                                playsInline
+                                              />
+
+                                              {/* icon play */}
+                                              <div
+                                                style={{
+                                                  position: "absolute",
+                                                  top: "50%",
+                                                  left: "50%",
+                                                  transform:
+                                                    "translate(-50%, -50%)",
+                                                  background: "rgba(0,0,0,0.5)",
+                                                  borderRadius: "50%",
+                                                  width: "36px",
+                                                  height: "36px",
+                                                  display: "flex",
+                                                  alignItems: "center",
+                                                  justifyContent: "center",
+                                                }}
+                                              >
+                                                <svg
+                                                  xmlns="http://www.w3.org/2000/svg"
+                                                  width="18"
+                                                  height="18"
+                                                  viewBox="0 0 24 24"
+                                                  fill="white"
+                                                >
+                                                  <path d="M8 5v14l11-7z" />
+                                                </svg>
+                                              </div>
+                                            </div>
+                                          ) : (
                                             <img
-                                              src={img}
+                                              key={idx}
+                                              src={media}
                                               alt="attachment"
                                               className={cx("chat-image")}
                                               style={{
@@ -1122,10 +1261,15 @@ function ChatManager() {
                                                 height: "90px",
                                                 objectFit: "cover",
                                                 borderRadius: "8px",
+                                                cursor: "pointer",
+                                              }}
+                                              onClick={() => {
+                                                setPreviewSrc(media);
+                                                setPreviewOpen(true);
                                               }}
                                             />
-                                          </a>
-                                        ))}
+                                          );
+                                        })}
                                       </div>
                                     ) : message.href &&
                                       (!message.text ||
@@ -1228,7 +1372,78 @@ function ChatManager() {
             </div>
           </div>
         )}
+
+        {/* preview img/video dialog */}
       </div>
+      <Dialog
+        open={previewOpen}
+        onClose={() => setPreviewOpen(false)}
+        fullScreen
+        PaperProps={{
+          sx: {
+            backgroundColor: "rgba(0,0,0,0.92)",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            position: "relative",
+          },
+        }}
+      >
+        {/* Nút X đóng */}
+        <Button
+          onClick={() => setPreviewOpen(false)}
+          sx={{
+            position: "absolute",
+            top: 70,
+            right: 10,
+            minWidth: "auto",
+            padding: "6px",
+            color: "#fff",
+            background: "rgba(0,0,0,0.5)",
+            borderRadius: "50%",
+            "&:hover": { background: "rgba(255,255,255,0.2)" },
+            zIndex: 99999999,
+          }}
+        >
+          <Close
+            sx={{
+              fontSize: 20,
+              color: "#fff",
+              cursor: "pointer",
+              borderRadius: "50%",
+              background: "red",
+              zIndex: 99999999,
+            }}
+          />
+        </Button>
+
+        {/* Hiển thị ảnh hoặc video */}
+        {previewSrc &&
+          (isVideoFile(previewSrc) ? (
+            <video
+              src={previewSrc}
+              controls
+              autoPlay
+              style={{
+                width: "100%",
+                maxWidth: "800px",
+                height: "80%",
+                borderRadius: "12px",
+              }}
+            />
+          ) : (
+            <img
+              src={previewSrc}
+              alt="preview"
+              style={{
+                width: "100%",
+                maxWidth: "800px",
+                height: "80%",
+                borderRadius: "12px",
+              }}
+            />
+          ))}
+      </Dialog>
     </>
   );
 }
