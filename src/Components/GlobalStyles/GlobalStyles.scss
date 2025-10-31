@@ -37,7 +37,7 @@
   --text_color: #081b3a;
   --c_boder: rgba(0, 0, 0, 0.15);
   --c_icon: #5a6981; //text secondary
-  --c_header_table: rgb(0 0 0 / .1); //text secondary
+  --c_header_table: rgb(0 0 0 / 0.1); //text secondary
   --c_active: #37b361;
   --c_active_hover: #37b361d1;
   --border: rgba(0, 0, 0, 0.1);
@@ -58,6 +58,11 @@
 
   // font
   --lato_font: "Lato", sans-serif;
+  --font-size-base: 14px;
+  --font-size-small: 13px;
+  --font-size-medium: 16px;
+  --font-size-large: 18px;
+  --font-size-title: 22px;
 
   --b_liner: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   // --b_liner_2: linear-gradient(135deg, #667eea 0%, #764ba2 100%)
@@ -68,6 +73,10 @@
   --background-paper: #1e293b;
   --text-primary: #fff;
   --text-secondary: #b0b0b0;
+}
+
+* {
+  font-family: var(--lato_font) !important;
 }
 
 html,

@@ -27,7 +27,7 @@ const urlRegister = "https://wf.mkt04.vawayai.com/webhook/register_msg";
 const urlLogin = "https://wf.mkt04.vawayai.com/webhook/login_msg";
 // const urlCheckExistToken =
 //   "https://wf.mkt04.vawayai.com/webhook-test/check_exist_toekn";
-const quen_pass = "https://wf.mkt04.vawayai.com/webhook-test/quen_pass";
+const quen_pass = "https://wf.mkt04.vawayai.com/webhook/quen_pass";
 
 function TabPanel(props) {
   const { children, value, index, ...other } = props;
@@ -155,8 +155,11 @@ function Login() {
   const [cfToken, setCfToken] = useState("");
   const [cfTokenRegister, setCfTokenRegister] = useState("");
   const [isForgotPass, setIsForgotPass] = useState(false);
-  const [forgotPhone, setForgotPhone] = useState("");
-  const [cfTokenForgot, setCfTokenForgot] = useState("");
+  const [forgotPhone, setForgotPhone] = useState(""); 
+  const [confirmForgotDialog, setConfirmForgotDialog] = useState({
+    open: false,
+    phone: "",
+  });
 
   let cipher = password;
   for (let i = 0; i < 12; i++) {
@@ -389,6 +392,15 @@ function Login() {
   const handleForgotPassword = async (e) => {
     e.preventDefault();
 
+    if (!forgotPhone.trim()) {
+      setSnackbar({
+        open: true,
+        message: "Vui lòng nhập số điện thoại trước khi yêu cầu quên mật khẩu.",
+        severity: "error",
+      });
+      return;
+    }
+
     const normalizedPhone = validatePhone(forgotPhone);
     if (!normalizedPhone) {
       setSnackbar({
@@ -399,15 +411,20 @@ function Login() {
       return;
     }
 
+    // ✅ Mở dialog xác nhận
+    setConfirmForgotDialog({ open: true, phone: normalizedPhone });
+  };
+
+  const handleConfirmForgot = async () => {
+    const normalizedPhone = confirmForgotDialog.phone;
+    setConfirmForgotDialog({ open: false, phone: "" });
+
     try {
       const res = await fetch(quen_pass, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           phone: normalizedPhone,
-          // cf_token: cfTokenForgot,
         }),
       });
 
@@ -666,7 +683,13 @@ function Login() {
                 </label>
               </div>
 
-              {/* <Box sx={{ display: "flex", justifyContent: "space-between" }}>
+              <div
+                className="cf-turnstile-login"
+                data-sitekey="0x4AAAAAAB2ihgOXExfs5zoP"
+                data-callback="cfCallbackLogin"
+              ></div>
+
+              <Box sx={{ display: "flex", justifyContent: "space-between" }}>
                 <button
                   type="submit"
                   className={styles.loginButton}
@@ -689,8 +712,8 @@ function Login() {
                 >
                   Quên mật khẩu
                 </button>
-              </Box> */}
-              <button
+              </Box>
+              {/* <button
                 type="submit"
                 className={styles.loginButton}
                 disabled={isLoading}
@@ -703,7 +726,7 @@ function Login() {
                 ) : (
                   "Đăng nhập"
                 )}
-              </button>
+              </button> */}
             </form>
           ) : (
             <form onSubmit={handleForgotPassword} className={styles.loginForm}>
@@ -842,11 +865,11 @@ function Login() {
               </div>
             </div>
 
-            {/* <div
+            <div
               className="cf-turnstile-register"
               data-sitekey="0x4AAAAAAB2ihgOXExfs5zoP"
               data-callback="cfCallbackRegister"
-            ></div> */}
+            ></div>
 
             {registerError && <p className={styles.error}>{registerError}</p>}
 
@@ -882,6 +905,61 @@ function Login() {
           {snackbar.message}
         </Alert>
       </Snackbar>
+
+      <Dialog
+        open={confirmForgotDialog.open}
+        onClose={() => setConfirmForgotDialog({ open: false, phone: "" })}
+        aria-labelledby="confirm-forgot-dialog-title"
+      >
+        <DialogTitle
+          id="confirm-forgot-dialog-title"
+          sx={{
+            textAlign: "center",
+            fontWeight: 600,
+            color: "var(--b_liner)",
+            fontSize: 22,
+          }}
+        >
+          Xác nhận quên mật khẩu
+        </DialogTitle>
+
+        <DialogContent sx={{ textAlign: "center", mt: 1 }}>
+          <p style={{ fontSize: 18 }}>
+            Bạn có chắc chắn muốn yêu cầu <br />
+            reset mật khẩu cho số{" "}
+            <strong style={{ color: "var(--b_liner)" }}>
+              {confirmForgotDialog.phone}
+            </strong>{" "}
+            không?
+          </p>
+        </DialogContent>
+
+        <DialogActions sx={{ justifyContent: "center", pb: 2 }}>
+          <Button
+            variant="outlined"
+            onClick={() => setConfirmForgotDialog({ open: false, phone: "" })}
+            sx={{
+              textTransform: "none",
+              fontSize: 15,
+              borderColor: "gray",
+            }}
+          >
+            Hủy
+          </Button>
+          <Button
+            variant="contained"
+            onClick={handleConfirmForgot}
+            sx={{
+              textTransform: "none",
+              background: "var(--b_liner)",
+              color: "white",
+              fontSize: 15,
+            }}
+          >
+            Xác nhận
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       <Dialog
         open={dialog.open}

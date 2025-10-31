@@ -86,3 +86,43 @@
   background-color: #37b361;
   border: 1px solid #fff;
 }
+ /* Tiêu đề “Administration” */
+  .title {
+    font-size: 18px !important;
+    font-weight: 700 !important;
+    color: #fff !important;
+    margin-bottom: 10px !important;
+  }
+
+  /* Các mục menu */
+  .MuiTypography-root,
+  .menuItem_text {
+    font-size: 15px !important;
+    font-weight: 500 !important;
+    color: #334155 !important;
+  }
+
+  /* Icon menu */
+  .icon_menu {
+    font-size: 20px !important;
+    color: #334155 !important;
+  }
+
+  /* Hover hiệu ứng nhẹ */
+  .MuiMenuItem-root:hover,
+  .menuItem:hover {
+    background-color: #f1f5f9 !important;
+    color: #111 !important;
+  }
+
+  /* Tên admin */
+  .MuiTypography-root[fontweight="600"] {
+    font-size: 14px !important;
+    font-weight: 600 !important;
+  }
+
+  /* Số điện thoại admin */
+  .MuiTypography-root[color="text.secondary"] {
+    font-size: 13px !important;
+    color: #6b7280 !important;
+  }

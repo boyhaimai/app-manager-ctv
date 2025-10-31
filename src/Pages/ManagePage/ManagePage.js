@@ -391,7 +391,7 @@ function ManagePage() {
           variant="h6"
           sx={{
             fontWeight: "bold",
-            fontSize: isMobile ? "18px" : "20px",
+            fontSize: isMobile ? "14px" : "17px",
             color: "white",
             ml: 2,
           }}
@@ -399,8 +399,6 @@ function ManagePage() {
           Tổng quan
         </Typography>
 
-        {/* If mobile: show single ICON button that opens menu.
-      If not mobile: show full controls (original layout). */}
         {isMobile ? (
           <>
             <IconButton
@@ -515,6 +513,7 @@ function ManagePage() {
                 sx={{
                   fontSize: "14px",
                   color: "var(--layer_background)!important",
+                  top: "-4px",
                 }}
               >
                 Name Project
@@ -524,6 +523,28 @@ function ManagePage() {
                 onChange={(e) => {
                   const chosen = configs.find((c) => c.id === e.target.value);
                   if (chosen) handleSelectConfig(chosen);
+                }}
+                MenuProps={{
+                  PaperProps: {
+                    sx: {
+                      borderRadius: 2,
+                      mt: 1,
+                      boxShadow: "0 4px 10px rgba(0,0,0,0.15)",
+                      "& ul": {
+                        paddingY: 0,
+                        fontSize: "14px",
+                        backgroundColor: "#fff",
+                      },
+                      "& li": {
+                        minHeight: "34px",
+                        fontSize: "14px",
+                        color: "#333",
+                        "&:hover": {
+                          backgroundColor: "#f5f5f5",
+                        },
+                      },
+                    },
+                  },
                 }}
                 renderValue={(selectedId) => {
                   const chosen = configs.find((c) => c.id === selectedId);
@@ -543,7 +564,7 @@ function ManagePage() {
                 sx={{
                   fontSize: "14px",
                   color: "var(--layer_background)",
-                  "& .MuiSelect-select": { py: 1.5 },
+                  "& .MuiSelect-select": { py: "5px" },
                   whiteSpace: "nowrap",
                   overflow: "hidden",
                   textOverflow: "ellipsis",
@@ -605,6 +626,7 @@ function ManagePage() {
                 color: "white !important",
                 borderColor: "rgba(255, 255, 255, 0.5)",
                 textTransform: "capitalize",
+                fontSize: 14,
                 "&:hover": {
                   borderColor: "white",
                   backgroundColor: "rgba(255, 255, 255, 0.1)",
@@ -626,6 +648,7 @@ function ManagePage() {
                 color: "white",
                 textTransform: "none",
                 marginRight: "10px ",
+                fontSize: 14,
                 "&:hover": {
                   backgroundColor: "rgba(255, 255, 255, 0.3)",
                 },
@@ -696,7 +719,7 @@ function ManagePage() {
                   > */}
                   <Grid item xs={12}>
                     <Paper sx={{ p: 2, borderRadius: 2 }}>
-                      <Typography fontWeight="bold" fontSize={18} mb={2}>
+                      <Typography fontWeight="bold" fontSize={15} mb={2}>
                         Tổng số hội thoại trong từng tháng
                       </Typography>
                       <ResponsiveContainer width="100%" height={300}>

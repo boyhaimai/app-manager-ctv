@@ -55,6 +55,50 @@
   align-items: center;
   z-index: 2000;
 }
+ /* Tiêu đề lớn (trang, section) */
+  .MuiTypography-h6 {
+    font-size: 22px !important;
+    font-weight: 700 !important;
+  }
+
+  /* Tiêu đề nhỏ trong card hoặc box */
+  .MuiTypography-subtitle1,
+  .MuiTypography-subtitle2 {
+    font-size: 18px !important;
+    font-weight: 600 !important;
+  }
+
+  /* Text trong bảng */
+  .MuiTableCell-root {
+    font-size: 13.5px !important;
+  }
+
+  /* Nhãn (label) hoặc Input */
+  .MuiInputLabel-root {
+    font-size: 13px !important;
+  }
+
+  /* Tooltip, snackbar */
+  .MuiTooltip-tooltip,
+  .MuiAlert-root {
+    font-size: 13px !important;
+  }
+
+  /* Số liệu trong card */
+  .stat-value {
+    font-size: 26px !important;
+    font-weight: 700 !important;
+    color: #111 !important;
+  }
+
+  /* Nhãn phụ */
+  .stat-label {
+    font-size: 13px !important;
+    color: #666 !important;
+  }
+
+
+
 @media (max-width: 768px) {
   .wrapper {
     width: 100%;
