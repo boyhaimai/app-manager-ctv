@@ -121,16 +121,32 @@ function ChatManager() {
       const data = await res.json();
       let newList = data[0]?.listCtv || [];
 
-      // Lọc bỏ item không hợp lệ (id hoặc name rỗng/null)
+      // Map rõ ràng: partnerId (uid_from), ctvId (id_nickzalo), tên sender/ctv, avatar, time...
       newList = newList
-        .filter((item) => item.id && item.name)
-        .map((item) => ({
-          ...item,
-          avatar:
-            item.avatar && item.avatar.trim() !== ""
-              ? item.avatar
-              : "https://stc-zaloprofile.zdn.vn/pc/v1/images/zalo_sharelogo.png",
-        }));
+        .map((item) => {
+          // API trả về các trường: uid_from (partner), sender_name, is_self, ctv_id, ctv_name, avatar, recentChat, time
+          const partnerId = item.uid_from || null;
+          const ctvIdFromApi = item.ctv_id || null;
+          const name =
+            item.sender_name || item.ctv_name || item.name || "Không tên";
+
+          return {
+            // dùng partnerId làm id hiển thị/ key popup nếu có, fallback sang ctvId (chỉ khi partnerId null)
+            id: partnerId || ctvIdFromApi,
+            partnerId,
+            ctvId: ctvIdFromApi,
+            name,
+            avatar:
+              item.avatar && item.avatar.trim() !== ""
+                ? item.avatar
+                : "https://stc-zaloprofile.zdn.vn/pc/v1/images/zalo_sharelogo.png",
+            time: item.time,
+            recentChat: item.recentChat,
+            href: item.href,
+          };
+        })
+        // Lọc bỏ item không hợp lệ (cần có ít nhất id và name)
+        .filter((item) => item.id && item.name);
 
       if (newList.length < limit) setHasMore(false);
       setCustomerList((prev) => {
@@ -310,13 +326,13 @@ function ChatManager() {
     setMsgHasMore((prev) => ({ ...prev, [conversation.id]: true }));
 
     // Trong openChat
-    const msgs = await getMessages(ctvId, conversation.id);
+    const uidFromToFetch = conversation.partnerId || conversation.id;
+    const msgs = await getMessages(ctvId, uidFromToFetch);
 
     if (msgs.length < limit) {
       setMsgHasMore((prev) => ({ ...prev, [conversation.id]: false }));
     }
 
-    // Gom ảnh có cùng thời gian
     // Gom ảnh có cùng thời gian (xem như gửi 1 lần)
     const grouped = [];
     let currentGroup = null;
