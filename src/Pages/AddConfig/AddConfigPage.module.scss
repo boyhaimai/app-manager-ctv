@@ -1,41 +1,123 @@
 .wrapper {
-  // margin: 15px 15px 15px 0;
   width: 100%;
-  height: 100%;
-  box-sizing: border-box;
-  border-radius: 8px;
-  overflow-y: auto;
   height: 100vh;
+  box-sizing: border-box;
+  overflow-y: auto;
+  /* Giữ nguyên background gradient */
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
   color: var(--c_letter);
   position: relative;
+  padding: 20px;
 }
+
 .title_header {
-  padding: 16px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.2) !important;
+  padding: 16px 24px;
   width: 100%;
   line-height: 25px;
-  position: sticky;
-  top: 0;
-  left: 0;
   z-index: 999;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-radius: 8px 8px 0 0;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   backdrop-filter: blur(10px);
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 }
+
 .title {
   font-size: 16px;
   font-weight: bold;
   color: var(--c_letter);
   align-items: center;
 }
+
 .link_change_password{
   font-size: 14px;
   color: var(--c_red_light) !important;
   cursor: pointer;
   margin-left: 25px;
+}
+
+/* Cập nhật style cho form container */
+.form_container {
+  max-width: 800px; /* Tăng chiều rộng tối đa của form */
+  margin: 0 auto;
+  padding: 0 !important;
+}
+
+/* Cập nhật style cho Box chứa form */
+.form_box {
+  padding: 40px !important; /* Tăng padding bên trong form box */
+  background-color: #ffffff !important; /* Màu trắng tinh khiết */
+  border-radius: 16px !important; /* Tăng border radius */
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08) !important; /* Shadow mềm mại hơn */
+  margin-top: 20px;
+}
+
+/* Style cho từng nhóm input (label + input) */
+.input_group {
+  margin-bottom: 25px; /* Tăng khoảng cách giữa các nhóm input */
+}
+
+/* Style cho label/tiêu đề input */
+.input_label_box {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px; /* Tăng khoảng cách giữa label và input */
+  font-weight: 600;
+  color: #333;
+}
+
+.input_label_text {
+  font-size: 19px !important;
+  font-weight: 600 !important;
+  color: #333 !important;
+}
+
+/* Style cho TextField (Input) */
+.text_field .MuiOutlinedInput-root {
+  border-radius: 10px; /* Bo tròn input field */
+  background-color: #f9f9f9; /* Màu nền nhẹ cho input */
+}
+
+.text_field .MuiOutlinedInput-notchedOutline {
+  border-color: #e0e0e0 !important; /* Màu border nhẹ */
+}
+
+.text_field .MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline {
+  border-color: #667eea !important; /* Màu border khi hover */
+}
+
+.text_field .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline {
+  border-color: #667eea !important; /* Màu border khi focus */
+  border-width: 2px !important;
+}
+
+/* Tăng chiều cao của input field */
+.text_field .MuiInputBase-input {
+  padding: 14px 14px !important; /* Tăng padding trên và dưới nhiều hơn */
+  height: auto !important; /* Đảm bảo chiều cao được tính toán lại */
+}
+
+/* Style cho phần Thông tin quan trọng */
+.info_box {
+  margin-top: 30px;
+  padding: 20px; /* Tăng padding cho info box */
+  border-radius: 10px;
+  background-color: #e6f7ff; /* Màu nền xanh nhạt */
+  border: 1px solid #91d5ff; /* Border xanh */
+}
+
+.info_title_box {
+  display: flex;
+  align-items: center;
+  color: #1890ff; /* Màu chữ xanh đậm */
+  font-weight: 600;
+  margin-bottom: 10px; /* Tăng khoảng cách */
+}
+
+.info_content {
+  font-size: 10px;
+  color: #333;
+  line-height: 1.6; /* Tăng line height */
+}
+.css-16wblaj-MuiInputBase-input-MuiOutlinedInput-input{
+      font-size: 16px !important;
 }

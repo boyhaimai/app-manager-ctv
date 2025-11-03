@@ -8,7 +8,18 @@ import {
   Snackbar,
   Alert,
 } from "@mui/material";
-import { Save, Chat, Group, QuestionAnswer, Create } from "@mui/icons-material";
+import {
+  Save,
+  PeopleAlt,
+  Chat,
+  QuestionAnswer,
+  Create,
+  InfoOutlined,
+  EditOutlined,
+  CalendarTodayOutlined,
+  MailOutline,
+  ArrowBack, // Thêm icon ArrowBack
+} from "@mui/icons-material";
 import classNames from "classnames/bind";
 import styles from "./AddConfigPage.module.scss";
 import { useNavigate } from "react-router-dom";
@@ -62,7 +73,6 @@ function AddConfigPage() {
         body: JSON.stringify(form),
       });
 
-      // ⚠️ Check hết token
       if (res.status === 401 || res.status === 403) {
         setSnackbar({
           open: true,
@@ -104,7 +114,6 @@ function AddConfigPage() {
           message: result.message || "Config đã thêm thành công",
           severity: "success",
         });
-        // điều hướng sau khi hiển thị thông báo thành công
         setTimeout(() => navigate("/manager-page"), 1200);
       }
     } catch (err) {
@@ -121,85 +130,103 @@ function AddConfigPage() {
     setSnackbar({ ...snackbar, open: false });
   };
 
+  const renderIcon = (IconComponent, color) => (
+    <IconComponent sx={{ mr: 1.5, fontSize: 20, color: color }} />
+  );
+
   return (
     <div className={cx("wrapper")}>
-      <Container>
+      <Container className={cx("form_container")}>
         <Box className={cx("title_header")}>
-          <Typography
-            variant="h6"
-            sx={{
-              color: "white",
-              textTransform: "capitalize",
-              fontWeight: 600,
-            }}
-          >
-            Thêm cấu hình webhook
-          </Typography>
-          <Box display="flex" gap={2}>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+            <Typography
+              variant="h6"
+              sx={{
+                color: "white",
+                fontWeight: 600,
+              }}
+            >
+              Thêm Cấu Hình Webhook
+            </Typography>
+          </Box>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+            <Button
+              variant="outlined"
+              size="small"
+              startIcon={<ArrowBack />}
+              onClick={() => navigate("/manager-page")}
+              sx={{
+                borderColor: "rgba(255, 255, 255, 0.5)",
+                color: "white",
+                textTransform: "none",
+                fontWeight: 600,
+                borderRadius: "8px",
+                "&:hover": {
+                  backgroundColor: "rgba(255, 255, 255, 0.1)",
+                  borderColor: "white",
+                },
+              }}
+            >
+              Quay lại
+            </Button>
             <Button
               variant="contained"
               size="small"
               startIcon={<Save />}
               onClick={handleSave}
               sx={{
-                backgroundColor: "rgba(255, 255, 255, 0.2)",
-                color: "white",
-                textTransform: "capitalize",
+                backgroundColor: "white",
+                color: "#667eea",
+                textTransform: "none",
+                fontWeight: 600,
+                borderRadius: "8px",
                 "&:hover": {
-                  backgroundColor: "rgba(255, 255, 255, 0.3)",
+                  backgroundColor: "#f0f0f0",
                 },
               }}
             >
-              Lưu cấu hình
+              Lưu Cấu Hình
             </Button>
           </Box>
         </Box>
 
-        <Box
-          p={4}
-          sx={{
-            backgroundColor: "rgba(255, 255, 255, 0.95)",
-            marginLeft: "2px",
-            marginRight: "2px",
-            height: "100%",
-            borderRadius: "8px",
-            backdropFilter: "blur(10px)",
-            boxShadow: "0 4px 20px rgba(0, 0, 0, 0.1)",
-          }}
-        >
-          <Box>
-            {/* name project */}
-            <Box sx={{ display: "flex", alignItems: "center", mb: 2, mt: 3 }}>
-              <Create sx={{ mr: 1, fontSize: 28, color: "#667eea" }} />
-              <Typography
-                variant="h6"
-                sx={{ fontWeight: 600, color: "#333", fontSize: 18 }}
-              >
+        <Box className={cx("form_box")}>
+          {/* name project */}
+          <Box className={cx("input_group")}>
+            <Box className={cx("input_label_box")}>
+              {renderIcon(EditOutlined, "#667eea")}
+              <Typography variant="h6" className={cx("input_label_text")}>
                 Tên dự án
               </Typography>
             </Box>
             <TextField
               fullWidth
-              size="small"
               name="name_project"
               value={form.name_project}
               onChange={handleChange}
               placeholder="Tên dự án"
+              size="medium"
+              className={cx("text_field")}
+              sx={{
+                "& .MuiInputBase-input::placeholder": {
+                  fontSize: "16px", // 👈 cỡ chữ placeholder
+                  opacity: 0.8, // tuỳ bạn
+                  color: "#aaa", // tuỳ bạn
+                },
+              }}
             />
+          </Box>
 
-            {/* Webhook CTV */}
-            <Box sx={{ display: "flex", alignItems: "center", mb: 2, mt: 3 }}>
-              <Group sx={{ mr: 1, fontSize: 28, color: "#667eea" }} />
-              <Typography
-                variant="h6"
-                sx={{ fontWeight: 600, color: "#333", fontSize: 18 }}
-              >
+          {/* Webhook CTV */}
+          <Box className={cx("input_group")}>
+            <Box className={cx("input_label_box")}>
+              {renderIcon(PeopleAlt, "#9c27b0")}
+              <Typography variant="h6" className={cx("input_label_text")}>
                 Webhook các CTV
               </Typography>
             </Box>
             <TextField
               fullWidth
-              size="small"
               name="get_ctv"
               value={form.get_ctv}
               onChange={handleChange}
@@ -210,21 +237,28 @@ function AddConfigPage() {
                   ? "Webhook phải có dạng https://.../webhook/..."
                   : ""
               }
+              className={cx("text_field")}
+              size="medium"
+              sx={{
+                "& .MuiInputBase-input::placeholder": {
+                  fontSize: "16px", // 👈 cỡ chữ placeholder
+                  opacity: 0.8, // tuỳ bạn
+                  color: "#aaa", // tuỳ bạn
+                },
+              }}
             />
+          </Box>
 
-            {/* Webhook hội thoại */}
-            <Box sx={{ display: "flex", alignItems: "center", mb: 2, mt: 3 }}>
-              <Chat sx={{ mr: 1, fontSize: 28, color: "#667eea" }} />
-              <Typography
-                variant="h6"
-                sx={{ fontWeight: 600, color: "#333", fontSize: 18 }}
-              >
+          {/* Webhook hội thoại */}
+          <Box className={cx("input_group")}>
+            <Box className={cx("input_label_box")}>
+              {renderIcon(CalendarTodayOutlined, "#4caf50")}
+              <Typography variant="h6" className={cx("input_label_text")}>
                 Webhook các hội thoại
               </Typography>
             </Box>
             <TextField
               fullWidth
-              size="small"
               name="get_chat"
               value={form.get_chat}
               onChange={handleChange}
@@ -235,21 +269,28 @@ function AddConfigPage() {
                   ? "Webhook phải có dạng https://.../webhook/..."
                   : ""
               }
+              className={cx("text_field")}
+              size="medium"
+              sx={{
+                "& .MuiInputBase-input::placeholder": {
+                  fontSize: "16px", // 👈 cỡ chữ placeholder
+                  opacity: 0.8, // tuỳ bạn
+                  color: "#aaa", // tuỳ bạn
+                },
+              }}
             />
+          </Box>
 
-            {/* Webhook message */}
-            <Box sx={{ display: "flex", alignItems: "center", mb: 2, mt: 3 }}>
-              <QuestionAnswer sx={{ mr: 1, fontSize: 28, color: "#667eea" }} />
-              <Typography
-                variant="h6"
-                sx={{ fontWeight: 600, color: "#333", fontSize: 18 }}
-              >
+          {/* Webhook message */}
+          <Box className={cx("input_group")}>
+            <Box className={cx("input_label_box")}>
+              {renderIcon(MailOutline, "#ff9800")}
+              <Typography variant="h6" className={cx("input_label_text")}>
                 Webhook các message
               </Typography>
             </Box>
             <TextField
               fullWidth
-              size="small"
               name="get_message"
               value={form.get_message}
               onChange={handleChange}
@@ -260,7 +301,30 @@ function AddConfigPage() {
                   ? "Webhook phải có dạng https://.../webhook/..."
                   : ""
               }
+              className={cx("text_field")}
+              size="medium"
+              sx={{
+                "& .MuiInputBase-input::placeholder": {
+                  fontSize: "16px", // 👈 cỡ chữ placeholder
+                  opacity: 0.8, // tuỳ bạn
+                  color: "#aaa", // tuỳ bạn
+                },
+              }}
             />
+          </Box>
+
+          {/* Thông tin quan trọng */}
+          <Box className={cx("info_box")}>
+            <Box className={cx("info_title_box")}>
+              {renderIcon(InfoOutlined, "#1890ff")}
+              <Typography variant="subtitle1" sx={{ fontWeight: 600, fontSize: 17 }}>
+                Thông tin quan trọng
+              </Typography>
+            </Box>
+            <Typography className={cx("info_content")} sx={{ fontSize: 14 }}>
+              Webhook URL sẽ được sử dụng để gửi thông báo khi có sự kiện xảy
+              ra. Đảm bảo URL có thể truy cập được và hỗ trợ phương thức POST.
+            </Typography>
           </Box>
         </Box>
       </Container>
@@ -273,7 +337,7 @@ function AddConfigPage() {
         <Alert
           onClose={handleCloseSnackbar}
           severity={snackbar.severity}
-          sx={{ width: "100%", fontSize: 13 }}
+          sx={{ width: "100%", fontSize: 14 }}
         >
           {snackbar.message}
         </Alert>

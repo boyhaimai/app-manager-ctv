@@ -4,6 +4,7 @@ import App from "~/App";
 import reportWebVitals from "./reportWebVitals";
 import GlobalStyles from "~/Components/GlobalStyles/index";
 import { ConfigContext } from "./Contexts/ConfigContext";
+import { BasicAuthProvider } from "./Contexts/BasicAuthContext";
 
 function Root() {
   const [config, setConfig] = useState(null);
@@ -11,9 +12,11 @@ function Root() {
   return (
     <React.StrictMode>
       <GlobalStyles>
-        <ConfigContext.Provider value={{ config, setConfig }}>
-          <App />
-        </ConfigContext.Provider>
+        <BasicAuthProvider>
+          <ConfigContext.Provider value={{ config, setConfig }}>
+            <App />
+          </ConfigContext.Provider>
+        </BasicAuthProvider>
       </GlobalStyles>
     </React.StrictMode>
   );

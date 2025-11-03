@@ -20,6 +20,7 @@ import styles from "./Login.module.scss";
 import classNames from "classnames/bind";
 import vazoai from "~/Components/assets/image/vazoAI (1).png";
 import { Lock, WarningAmber } from "@mui/icons-material";
+import { useBasicAuth } from "~/Contexts/BasicAuthContext";
 
 const cx = classNames.bind(styles);
 
@@ -155,11 +156,18 @@ function Login() {
   const [cfToken, setCfToken] = useState("");
   const [cfTokenRegister, setCfTokenRegister] = useState("");
   const [isForgotPass, setIsForgotPass] = useState(false);
-  const [forgotPhone, setForgotPhone] = useState(""); 
+  const [forgotPhone, setForgotPhone] = useState("");
   const [confirmForgotDialog, setConfirmForgotDialog] = useState({
     open: false,
     phone: "",
   });
+  // ⚙️ Biến lưu Basic Auth (user + pass)
+  const { basicAuth } = useBasicAuth();
+
+  console.log(basicAuth,'basic');
+  
+
+  const authHeader = "Basic " + btoa(`${basicAuth.user}:${basicAuth.pass}`);
 
   let cipher = password;
   for (let i = 0; i < 12; i++) {
@@ -286,7 +294,7 @@ function Login() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: "Basic " + btoa("boyhaimais:bangdz202"),
+          Authorization: authHeader,
         },
         body: JSON.stringify({
           phone: normalizedPhone,
@@ -422,7 +430,10 @@ function Login() {
     try {
       const res = await fetch(quen_pass, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: authHeader, // 👈 Thêm Basic Auth vào đây
+        },
         body: JSON.stringify({
           phone: normalizedPhone,
         }),
@@ -518,7 +529,7 @@ function Login() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: "Basic " + btoa("boyhaimais:bangdz202"),
+          Authorization: authHeader,
         },
         body: JSON.stringify({
           name,

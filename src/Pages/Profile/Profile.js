@@ -18,6 +18,7 @@ import DialogContent from "@mui/material/DialogContent";
 import DialogActions from "@mui/material/DialogActions";
 import styles from "./Profile.module.scss";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
+import { useBasicAuth } from "~/Contexts/BasicAuthContext";
 
 const cx = classNames.bind(styles);
 const urlChangePassword = "https://wf.mkt04.vawayai.com/webhook/change_pass";
@@ -75,6 +76,10 @@ function Profile() {
     new: false,
     confirm: false,
   });
+  const [openChangeToken, setOpenChangeToken] = useState(false);
+  const { basicAuth, setBasicAuth } = useBasicAuth();
+  const [basicUser, setBasicUser] = useState(basicAuth.user);
+  const [basicPass, setBasicPass] = useState(basicAuth.pass);
 
   // eslint-disable-next-line no-unused-vars
   const [loading, setLoading] = useState(true);
@@ -520,9 +525,26 @@ function Profile() {
 
         <Divider sx={{ my: 4, borderColor: "#e0e0e0" }} />
 
-        <Typography sx={{ fontSize: 16, fontWeight: "bold", mb: 3 }}>
-          Bảo mật
-        </Typography>
+        {/* --- Đổi token --- */}
+        <Box mb={3}>
+          <Typography sx={{ fontSize: 16, fontWeight: 600, mb: 1 }}>
+            Bảo mật Basic Auth
+          </Typography>
+          {/* <Button
+            variant="text"
+            onClick={() => setOpenChangeToken(true)}
+            sx={{
+              color: "var(--c_blue)",
+              fontSize: 13,
+              textTransform: "none",
+              p: 0,
+              "&:hover": { textDecoration: "underline" },
+            }}
+          >
+            Đổi token
+          </Button> */}
+        </Box>
+
         <Box mb={3}>
           <Typography sx={{ fontSize: 16, fontWeight: 600, mb: 1 }}>
             Mật khẩu
@@ -682,6 +704,96 @@ function Profile() {
           </DialogActions>
         </Dialog>
       </Box>
+
+      <Dialog
+        open={openChangeToken}
+        onClose={() => setOpenChangeToken(false)}
+        PaperProps={{
+          sx: {
+            borderRadius: "12px",
+            p: 1,
+            minWidth: { xs: "90%", sm: 400 },
+          },
+        }}
+      >
+        <DialogTitle sx={{ fontSize: 16, fontWeight: 600 }}>
+          Cập nhật Basic Auth
+        </DialogTitle>
+        <DialogContent sx={{ pt: 1 }}>
+          <Typography sx={{ fontSize: 13, mb: 1 }}>
+            Tên đăng nhập (User)
+          </Typography>
+          <TextField
+            fullWidth
+            type="text"
+            placeholder="Nhập username mới"
+            value={basicUser}
+            onChange={(e) => setBasicUser(e.target.value)}
+            sx={{ ...inputStyle, mb: 2 }}
+          />
+
+          <Typography sx={{ fontSize: 13, mb: 1 }}>
+            Mật khẩu (Password)
+          </Typography>
+          <TextField
+            fullWidth
+            type="password"
+            placeholder="Nhập mật khẩu mới"
+            value={basicPass}
+            onChange={(e) => setBasicPass(e.target.value)}
+            sx={{ ...inputStyle, mb: 2 }}
+          />
+        </DialogContent>
+
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button
+            onClick={() => setOpenChangeToken(false)}
+            sx={{
+              fontSize: 13,
+              color: "#1e1e1e",
+              textTransform: "none",
+              "&:hover": { bgcolor: "#f0f2f5" },
+            }}
+          >
+            Hủy
+          </Button>
+          <Button
+            variant="contained"
+            sx={{
+              bgcolor: "#0F172A",
+              color: "#fff",
+              fontSize: 13,
+              textTransform: "none",
+              px: 3,
+              "&:hover": { bgcolor: "#1e293b" },
+              borderRadius: "8px",
+            }}
+            onClick={() => {
+              if (!basicUser.trim() || !basicPass.trim()) {
+                setSnackbar({
+                  open: true,
+                  message: "Vui lòng nhập đầy đủ username và password.",
+                  severity: "error",
+                });
+                return;
+              }
+
+              // 👇 Cập nhật biến trong Context, không gọi API
+              setBasicAuth({ user: basicUser, pass: basicPass });
+
+              setSnackbar({
+                open: true,
+                message: "Đã cập nhật Basic Auth trong ứng dụng!",
+                severity: "success",
+              });
+
+              setOpenChangeToken(false);
+            }}
+          >
+            Lưu
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       <Snackbar
         open={snackbar.open}

@@ -969,7 +969,8 @@ function ManagePage() {
                   fontWeight: 600,
                   mb: 2,
                   color: "#020202b4",
-                  fontSize: 18,
+                  fontSize: 16,
+                  textTransform: "uppercase",
                 }}
               >
                 Cấu hình Webhook cho dự án
@@ -999,7 +1000,7 @@ function ManagePage() {
                 <GroupAdd sx={{ mr: 1, fontSize: 28, color: "#667eea" }} />
                 <Typography
                   variant="h6"
-                  sx={{ fontWeight: 600, fontSize: 18, mr: 1 }}
+                  sx={{ fontWeight: 600, fontSize: 15, mr: 1 }}
                 >
                   Webhook các CTV
                 </Typography>
@@ -1034,7 +1035,7 @@ function ManagePage() {
                 <Chat sx={{ mr: 1, fontSize: 28, color: "#667eea" }} />
                 <Typography
                   variant="h6"
-                  sx={{ fontWeight: 600, fontSize: 18, marginRight: "10px" }}
+                  sx={{ fontWeight: 600, fontSize: 15, marginRight: "10px" }}
                 >
                   Webhook các hội thoại
                 </Typography>
@@ -1068,7 +1069,7 @@ function ManagePage() {
                 <Forum sx={{ mr: 1, fontSize: 28, color: "#667eea" }} />
                 <Typography
                   variant="h6"
-                  sx={{ fontWeight: 600, fontSize: 18, marginRight: "10px" }}
+                  sx={{ fontWeight: 600, fontSize: 15, marginRight: "10px" }}
                 >
                   Webhook các message
                 </Typography>
